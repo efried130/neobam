@@ -26,8 +26,7 @@ window_mode=function(Wobs,Sobs,date,perc_lower,perc_upper,nt_window,nx_sample,pr
       ntot=sum(hasdat)
       W_index=1:ncol(Wobs)
     } else {
-
-      W_mean=colMeans(Wobs)
+      W_mean=colMeans(Wobs, na.rm=TRUE)
       W_percentiles=quantile(W_mean, c(perc_lower,perc_upper), na.rm=TRUE)
 
       W_index= which(W_mean>=W_percentiles[1] & W_mean<=W_percentiles[2] )
