@@ -7,16 +7,16 @@
 #'    - name of JSON file that contains associated reach file data
 
 # Functions
-source("/app/neobamdata/neobam/config.R")
-source("/app/neobamdata/neobam/input.R")
-source("/app/neobamdata/neobam/neobam_functions.R")
-source("/app/neobamdata/neobam/output.R")
-source("/app/neobamdata/neobam/process.R")
+source("/app/neobam/config.R")
+source("/app/neobam/input.R")
+source("/app/neobam/neobam_functions.R")
+source("/app/neobam/output.R")
+source("/app/neobam/process.R")
 
 # Constants
 IN_DIR = file.path("/mnt", "data", "input")
 OUT_DIR = file.path("/mnt", "data", "output")
-STAN_FILE = file.path("/app", "neobamdata", "neobam", "neobam_stan_engine.stan")
+STAN_FILE = file.path("/app", "neobam", "neobam_stan_engine.stan")
 
 #' Identify reach and locate SWOT and SoS files.
 #'
@@ -32,6 +32,23 @@ get_reach_files = function(reaches_json){
               sos_file = file.path(IN_DIR, "sos", json_data$sos)))
 }
 
+#' Create output data structure for invalid observations
+#'
+#' @param nt number of time steps
+#'
+#' @return named list of discharge and posteriors
+create_invalid_out = function(nt) {
+  nt_vector = rep(NA_real_, nt)
+  base_discharge = list(nt_vector, nt_vector, nt_vector)
+  base_posteriors = list(
+    r = list(mean=NA_real_, sd=NA_real_),
+    logn = list(mean=NA_real_, sd=NA_real_),
+    logWb = list(mean=NA_real_, sd=NA_real_),
+    logDb = list(mean=NA_real_, sd=NA_real_)
+  )
+  return(list(discharge=base_discharge, posteriors=list(base_posteriors, base_posteriors, base_posteriors)))
+}
+
 #' Execute neoBAM
 main = function() {
 
@@ -45,13 +62,21 @@ main = function() {
   in_data = get_input(io_data$swot_file, io_data$sos_file, io_data$reach_id)
 
   # Process
-  process_data = process_data(in_data, STAN_FILE)
+  if (in_data$valid != FALSE) {
+    process_data = process_data(in_data, STAN_FILE)
+    out_data = list(reach_id = io_data$reach_id,
+                    nt = in_data$swot_data$nt,
+                    invalid_nodes = in_data$invalid_nodes,
+                    invalid_times = in_data$invalid_times)
+  } else {
+    process_data = create_invalid_out(length(in_data$nt))
+    out_data = list(reach_id = io_data$reach_id,
+                    nt = in_data$nt,
+                    invalid_nodes = vector(mode = "list"),
+                    invalid_times = vector(mode = "list"))
+  }
 
-  # Write Output
-  out_data = list(reach_id = io_data$reach_id,
-                  nt = in_data$swot_data$nt,
-                  invalid_nodes = in_data$invalid_nodes,
-                  invalid_times = in_data$invalid_times)
+  # Write output
   write_output(out_data, process_data$posteriors, process_data$discharge, OUT_DIR)
   end = Sys.time()
   print(paste("Total execution time:", (end - start)))
