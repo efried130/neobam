@@ -79,8 +79,7 @@ main = function() {
   # Write output
   write_output(out_data, process_data$posteriors, process_data$discharge, OUT_DIR)
   end = Sys.time()
-  print(paste("Total execution time:", (end - start)))
-
+  print(paste("Total execution time for reach", io_data$reach_id, ":", (end - start), "seconds."))
 }
 
 main()
