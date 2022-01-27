@@ -30,8 +30,9 @@ get_input = function(swot_file, sos_file, reach_id) {
     return(list(valid=FALSE, reach_id=reach_id, nx=swot_data$nx, nt=swot_data$nt))
   } else {
     # Create a list of data with reach identifier
-    return(list(reach_id = reach_id, swot_data=data$swot_data, sos_data=data$sos_data,
-                invalid_nodes=data$invalid_nodes, invalid_times=data$invalid_times))
+    return(list(valid=TRUE, reach_id = reach_id, swot_data=data$swot_data,
+                sos_data=data$sos_data, invalid_nodes=data$invalid_nodes,
+                invalid_times=data$invalid_times))
   }
 }
 
