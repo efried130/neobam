@@ -43,7 +43,7 @@ FROM stage1 as stage2
 RUN mkdir -p /app/data/input \
 	&& mkdir /app/data/output 
 COPY ./run_neobam.R /app/
-COPY ./neobamdata /app/neobamdata
+COPY ./neobam /app/neobam
 
 # STAGE 3 - Execute algorithm
 FROM stage2 as stage3
