@@ -1,4 +1,4 @@
-# momma-docker
+# neoBAM-docker
 
 neoBAM docker container hosted on AWS ECR used to create containers in the cloud.
 
