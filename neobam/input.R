@@ -102,7 +102,7 @@ get_sos = function(sos_file, reach_id) {
   window_params$upperbound_logDb = max(var.get.nc(n_grp, "upperbound_logDb")[index])
 
   window_params$r_hat = exp(var.get.nc(n_grp, "logr_hat")[indexes])
-  window_params$r_sd = exp(var.get.nc(n_grp, "logr_hat")[indexes])
+  window_params$r_sd = exp(var.get.nc(n_grp, "logr_sd")[indexes])
   window_params$lowerbound_r = min(exp(var.get.nc(n_grp, "lowerbound_logr")[index]))
   window_params$upperbound_r = max(exp(var.get.nc(n_grp, "upperbound_logr")[index]))
 
