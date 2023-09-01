@@ -23,7 +23,7 @@ window_mode=function(Wobs,Sobs,date,perc_lower,perc_upper,nt_window,nx_sample,pr
     #if there are less times than the window size
     if (ncol(Wobs)<nt_window){
       hasdat=matrix(as.integer(Wobs>0),nrow=nrow(Wobs),ncol=ncol(Wobs))
-      ntot=sum(hasdat)
+      ntot=sum(hasdat,na.rm=TRUE)
       W_index=1:ncol(Wobs)
     } else {
       W_mean=colMeans(Wobs, na.rm=TRUE)
@@ -46,7 +46,7 @@ window_mode=function(Wobs,Sobs,date,perc_lower,perc_upper,nt_window,nx_sample,pr
     Wobs=Wobs[which_rows,W_index]
     Sobs=Sobs[which_rows,W_index]
     hasdat=matrix(as.integer(Wobs>0),nrow=nrow(Wobs),ncol=ncol(Wobs))
-    ntot=sum(hasdat)
+    ntot=sum(hasdat,na.rm=TRUE)
     priors=lapply(priors, window_prior, which_rows)
 
  return(list('hasdat'=hasdat,'ntot'=ntot,'Wobs'=Wobs,'Sobs'=Sobs,'row_filter'=which_rows,'column_filter'=W_index, 'priors'=priors))
