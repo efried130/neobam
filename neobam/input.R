@@ -27,6 +27,7 @@ get_input = function(swot_file, sos_file, reach_id) {
 
   # Return list of valid observations
   if (length(data) == 0) {
+    print('in get_input(), neobam has decided the data are invalid')
     return(list(valid=FALSE, reach_id=reach_id, nx=swot_data$nx, nt=swot_data$nt))
   } else {
     # Create a list of data with reach identifier
