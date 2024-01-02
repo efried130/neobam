@@ -26,7 +26,11 @@ STAN_FILE = file.path("/app", "neobam", "neobam_stan_engine.stan")
 get_reach_files = function(reaches_json){
   # Get reach identifier from array environment variable
   index = strtoi(Sys.getenv("AWS_BATCH_JOB_ARRAY_INDEX")) + 1
-  json_data = rjson::fromJSON(file=file.path(IN_DIR, reaches_json))[[index]]
+  args = commandArgs(trailingOnly=TRUE)
+  all_reach_jsons = Sys.glob(file.path(IN_DIR, 'reaches*'))
+  reaches_json = all_reach_jsons[strtoi(args[1])]
+
+  json_data = rjson::fromJSON(file=file.path(reaches_json))[[index]]
   return(list(reach_id = json_data$reach_id,
               swot_file = file.path(IN_DIR, "swot", json_data$swot),
               sos_file = file.path(IN_DIR, "sos", json_data$sos)))
