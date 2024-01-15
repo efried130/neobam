@@ -27,8 +27,13 @@ get_reach_files = function(reaches_json){
   # Get reach identifier from array environment variable
   index = strtoi(Sys.getenv("AWS_BATCH_JOB_ARRAY_INDEX")) + 1
   args = commandArgs(trailingOnly=TRUE)
-  all_reach_jsons = Sys.glob(file.path(IN_DIR, 'reaches*'))
-  reaches_json = all_reach_jsons[strtoi(args[1])]
+
+
+  if (length(args)>=1){
+      reaches_json = file.path(input_dir, paste('reaches_',strtoi(args[1]),'.json'))
+  } else{
+      reaches_json = file.path(input_dir, 'reaches.json')
+  }
 
   json_data = rjson::fromJSON(file=file.path(reaches_json))[[index]]
   return(list(reach_id = json_data$reach_id,
