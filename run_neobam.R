@@ -30,9 +30,9 @@ get_reach_files = function(reaches_json){
 
 
   if (length(args)>=1){
-      reaches_json = file.path(input_dir, paste('reaches_',strtoi(args[1]),'.json'))
+      reaches_json = file.path(IN_DIR, paste('reaches',strtoi(args[1]),'.json'))
   } else{
-      reaches_json = file.path(input_dir, 'reaches.json')
+      reaches_json = file.path(IN_DIR, 'reaches.json')
   }
 
   json_data = rjson::fromJSON(file=file.path(reaches_json))[[index]]
