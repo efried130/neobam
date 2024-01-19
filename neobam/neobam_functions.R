@@ -126,7 +126,8 @@ upperbound_logn = window_params$upperbound_logn
 
 run_neobam = function(neobam_data_and_priors,sourcefile){
   #run it here
-  library(rstan,quietly=TRUE,warn.conflicts = FALSE)
+  library(rstan)
+  rstan_options(auto_write = FALSE)
   library(dplyr,quietly=TRUE,warn.conflicts = FALSE)
   library(tidyr, quietly=TRUE,warn.conflicts = FALSE)
   library(stringr,quietly=TRUE,warn.conflicts = FALSE)
