@@ -60,10 +60,6 @@ create_invalid_out = function(nt) {
 
 #' Execute neoBAM
 main = function() {
-  library(rstan,quietly=TRUE,warn.conflicts = FALSE)
-  library(dplyr,quietly=TRUE,warn.conflicts = FALSE)
-  library(tidyr, quietly=TRUE,warn.conflicts = FALSE)
-  library(stringr,quietly=TRUE,warn.conflicts = FALSE)
 
   # Identify reach files to process
   start = Sys.time()
