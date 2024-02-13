@@ -68,7 +68,30 @@ get_swot = function(swot_file) {
 get_sos = function(sos_file, reach_id) {
 
   Q_priors = list()
-  sos = open.nc(sos_file)
+  tries = 5
+  while (tries > 0){
+    tryCatch (
+      {
+        sos = open.nc(sos_file)
+        tries = 0 
+      },
+      error=function(e) {
+              message('An Error Occurred')
+              print(e)
+              tries = tries - 1
+              Sys.sleep(runif(1, min=100, max=500))
+          },
+      warning=function(w) {
+            message('A Warning Occurred')
+            print(w)
+            return(NA)
+        
+  }
+    )
+
+  }
+
+  
   reach_grp = grp.inq.nc(sos, "reaches")$self
   rids = var.get.nc(reach_grp, "reach_id")
   index = which(rids == reach_id, arr.ind=TRUE)

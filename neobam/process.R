@@ -52,6 +52,8 @@ process_data = function(data, stan_file) {
   # Execute neoBAM three times
   cl <- makeCluster(3)
   registerDoParallel(cl)
+  print('here is the stan file')
+  print(stan_file)
   posteriors = foreach(index=1:3, .combine='c', .export=c("execute_neobam", "run_neobam")) %dopar%
     execute_neobam(neobam_data_and_priors=data_and_priors, sourcefile=stan_file)
 
