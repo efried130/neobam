@@ -10,9 +10,9 @@ library(doParallel)
 #' @param sourcefile string path to .stan file
 #'
 #' @return list of posteriors (r, logn, logWb, logDb)
-execute_neobam = function(neobam_data_and_priors, sourcefile) {
-  return(list(run_neobam(neobam_data_and_priors, sourcefile)))
-}
+#execute_neobam = function(neobam_data_and_priors, sourcefile) {
+#  return(list(run_neobam(neobam_data_and_priors, sourcefile)))
+#}
 
 #' Retrieve discharge time series
 #'
@@ -63,12 +63,16 @@ process_data = function(data, stan_file) {
   #stopCluster(cl)
 
   #return(list(discharge=discharge, posteriors=posteriors))
+  
+# 2/21/24 remaking in serial to save $$$ on AWS. need to return a named list of lists
 
+discharge=vector(mode='list', length=3)
+  posteriors=vector(mode='list', length=3)
   for (i in 1:3){
-      posteriors=(run_neobam(neobam_data_and_priors=neobam_data_and_priors, sourcefile=sourcefile))
-      discharge[[i]]=remake_discharge(Wobs=data$swot_data$width, Sobs=data$swot_data$slope2, posteriors=posteriors)
+      posteriors[[i]]=(run_neobam(neobam_data_and_priors=neobam_data_and_priors, sourcefile=sourcefile))
+      discharge[[i]]=remake_discharge(Wobs=data$swot_data$width, Sobs=data$swot_data$slope2, posteriors=posteriors[[i]])
     }
 
-
+  return(list(discharge=discharge, posteriors=posteriors))
   
 }
