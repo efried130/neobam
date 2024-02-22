@@ -50,18 +50,25 @@ process_data = function(data, stan_file) {
                                                     windowed$priors)
 
   # Execute neoBAM three times
-  cl <- makeCluster(3)
-  registerDoParallel(cl)
-  print('here is the stan file')
-  print(stan_file)
-  posteriors = foreach(index=1:3, .combine='c', .export=c("execute_neobam", "run_neobam")) %dopar%
-    execute_neobam(neobam_data_and_priors=data_and_priors, sourcefile=stan_file)
-
+  #cl <- makeCluster(3)
+  #registerDoParallel(cl)
+  #print('here is the stan file')
+  #print(stan_file)
+  #posteriors = foreach(index=1:3, .combine='c', .export=c("execute_neobam", "run_neobam")) %dopar%
+  #  execute_neobam(neobam_data_and_priors=data_and_priors, sourcefile=stan_file)
+#
   # Generate discharge time series
-  discharge = foreach(index=1:3, .combine='c', .export=c("retrieve_discharge", "remake_discharge")) %dopar%
-    retrieve_discharge(index, width=data$swot_data$width, slope2=data$swot_data$slope2, posteriors=posteriors)
-  stopCluster(cl)
+ # discharge = foreach(index=1:3, .combine='c', .export=c("retrieve_discharge", "remake_discharge")) %dopar%
+  #  retrieve_discharge(index, width=data$swot_data$width, slope2=data$swot_data$slope2, posteriors=posteriors)
+  #stopCluster(cl)
 
-  return(list(discharge=discharge, posteriors=posteriors))
+  #return(list(discharge=discharge, posteriors=posteriors))
 
+  for (i in 1:3){
+      posteriors=execute_neobam(neobam_data_and_priors=data_and_priors, sourcefile=stan_file)
+      discharge=retrieve_discharge(width=data$swot_data$width, slope2=data$swot_data$slope2, posteriors=posteriors)
+    }
+
+
+  
 }
