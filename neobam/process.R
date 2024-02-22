@@ -1,8 +1,8 @@
 #' Execute neoBAM operations
 
 # Libraries
-library(parallel)
-library(doParallel)
+#library(parallel)
+#library(doParallel)
 
 #' Execute neoBAM
 #'
