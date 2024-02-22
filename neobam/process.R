@@ -66,7 +66,7 @@ process_data = function(data, stan_file) {
 
   for (i in 1:3){
       posteriors=(run_neobam(neobam_data_and_priors=neobam_data_and_priors, sourcefile=sourcefile))
-      discharge[[i]]=remake_discharge(width=data$swot_data$width, slope2=data$swot_data$slope2, posteriors=posteriors)
+      discharge[[i]]=remake_discharge(Wobs=data$swot_data$width, Sobs=data$swot_data$slope2, posteriors=posteriors)
     }
 
 
