@@ -56,13 +56,13 @@ main = function() {
   args = commandArgs(trailingOnly=TRUE)
   if (length(args)>=2){
       index = strtoi(args[1]) + 1
-      reaches_json = file.path(input_dir, paste(args[2]))
+      reaches_json = file.path(IN_DIR, paste(args[2]))
   } else if (length(args)>=1) {
       index = strtoi(args[1]) + 1
-      reaches_json = file.path(input_dir, 'reaches.json')
+      reaches_json = file.path(IN_DIR, 'reaches.json')
   } else{
       index = strtoi(Sys.getenv("AWS_BATCH_JOB_ARRAY_INDEX")) + 1
-      reaches_json = file.path(input_dir, 'reaches.json')
+      reaches_json = file.path(IN_DIR, 'reaches.json')
   }
   io_data = get_reach_files(reaches_json, index)
 
