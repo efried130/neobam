@@ -58,28 +58,22 @@ get_swot = function(swot_file) {
 
 }
 
-#' Retrieve SOS data.
-#'
-#' @param sos_file string path to SOS NetCDF file
-#' @param reach_id integer unique reach identifier
-#'
-#' @return list of Q priors
-#' @export
-get_sos = function(sos_file, reach_id) {
-
-  Q_priors = list()
-  tries = 5
+reload_sos = function(sos_file, retry_number){
+  tries = retry_number
   while (tries > 0){
     tryCatch (
       {
         sos = open.nc(sos_file)
-        tries = 0 
+        print("sos loaded...")
+        tries = 0
+
       },
       error=function(e) {
               message('An Error Occurred')
               print(e)
               tries = tries - 1
               Sys.sleep(runif(1, min=100, max=500))
+
           },
       warning=function(w) {
             message('A Warning Occurred')
@@ -90,56 +84,102 @@ get_sos = function(sos_file, reach_id) {
     )
 
   }
+  return(sos)
 
-  
-  reach_grp = grp.inq.nc(sos, "reaches")$self
-  rids = var.get.nc(reach_grp, "reach_id")
-  index = which(rids == reach_id, arr.ind=TRUE)
-
-  node_grp = grp.inq.nc(sos, "nodes")$self
-  nrids = var.get.nc(node_grp, "reach_id")
-  indexes = which(nrids == reach_id, arr.ind=TRUE)
-
-  model_grp = grp.inq.nc(sos, "model")$self
-  Q_priors$logQ_hat = log(var.get.nc(model_grp, "mean_q")[index])
-  Q_priors$upperbound_logQ = log(var.get.nc(model_grp, "max_q")[index])
-  min_q = var.get.nc(model_grp, "min_q")[index]   # Check action taken
-  if ((min_q < 0) | (is.na(min_q))) {
-    Q_priors$lowerbound_logQ = NA
-  } else {
-    Q_priors$lowerbound_logQ = log(min_q)
-  }
-
-  r_grp = grp.inq.nc(sos, "gbpriors/reach")$self
-  Q_priors$logQ_sd = var.get.nc(r_grp, "logQ_sd")[index]
-
-  window_params = list()
-  n_grp = grp.inq.nc(sos, "gbpriors/node")$self
-  window_params$logWb_hat = var.get.nc(n_grp, "logWb_hat")[indexes]
-  window_params$logWb_sd = var.get.nc(n_grp, "logWb_sd")[indexes]
-  window_params$lowerbound_logWb = min(var.get.nc(n_grp, "lowerbound_logWb")[index])
-  window_params$upperbound_logWb = max(var.get.nc(n_grp, "upperbound_logWb")[index])
-
-  window_params$logDb_hat = var.get.nc(n_grp, "logDb_hat")[indexes]
-  window_params$logDb_sd = var.get.nc(n_grp, "logDb_sd")[indexes]
-  window_params$lowerbound_logDb = min(var.get.nc(n_grp, "lowerbound_logDb")[index])
-  window_params$upperbound_logDb = max(var.get.nc(n_grp, "upperbound_logDb")[index])
-
-  window_params$r_hat = exp(var.get.nc(n_grp, "logr_hat")[indexes])
-  window_params$r_sd = exp(var.get.nc(n_grp, "logr_sd")[indexes])
-  window_params$lowerbound_r = min(exp(var.get.nc(n_grp, "lowerbound_logr")[index]))
-  window_params$upperbound_r = max(exp(var.get.nc(n_grp, "upperbound_logr")[index]))
-
-  window_params$logn_hat = var.get.nc(n_grp, "logn_hat")[indexes]
-  window_params$logn_sd = var.get.nc(n_grp, "logn_sd")[indexes]
-  window_params$lowerbound_logn = min(var.get.nc(n_grp, "lowerbound_logn")[index])
-  window_params$upperbound_logn = max(var.get.nc(n_grp, "upperbound_logn")[index])
-
-  close.nc(sos)
-
-  return(list(Q_priors=Q_priors, window_params=window_params))
 }
 
+
+#' Retrieve SOS data.
+#'
+#' @param sos_file string path to SOS NetCDF file
+#' @param reach_id integer unique reach identifier
+#'
+#' @return list of Q priors
+#' @export
+get_sos = function(sos_file, reach_id) {
+
+  Q_priors = list()
+  sos = reload_sos(sos_file, 5)
+  print('loaded sos...')
+  print(sos)
+
+
+  tries = 5
+  while (tries >0){
+    tryCatch ( {
+    print('trying...')
+    reach_grp = grp.inq.nc(sos, "reaches")$self
+    rids = var.get.nc(reach_grp, "reach_id")
+    index = which(rids == reach_id, arr.ind=TRUE)
+
+    node_grp = grp.inq.nc(sos, "nodes")$self
+    nrids = var.get.nc(node_grp, "reach_id")
+    indexes = which(nrids == reach_id, arr.ind=TRUE)
+
+    model_grp = grp.inq.nc(sos, "model")$self
+    print("made it to the model group")
+    print(model_grp)
+    Q_priors$logQ_hat = log(var.get.nc(model_grp, "mean_q")[index])
+    Q_priors$upperbound_logQ = log(var.get.nc(model_grp, "max_q")[index])
+    min_q = var.get.nc(model_grp, "min_q")[index]   # Check action taken
+    if ((min_q < 0) | (is.na(min_q))) {
+      Q_priors$lowerbound_logQ = NA
+    } else {
+      Q_priors$lowerbound_logQ = log(min_q)
+    }
+
+    r_grp = grp.inq.nc(sos, "gbpriors/reach")$self
+    Q_priors$logQ_sd = var.get.nc(r_grp, "logQ_sd")[index]
+
+    window_params = list()
+    n_grp = grp.inq.nc(sos, "gbpriors/node")$self
+    window_params$logWb_hat = var.get.nc(n_grp, "logWb_hat")[indexes]
+    window_params$logWb_sd = var.get.nc(n_grp, "logWb_sd")[indexes]
+    window_params$lowerbound_logWb = min(var.get.nc(n_grp, "lowerbound_logWb")[index])
+    window_params$upperbound_logWb = max(var.get.nc(n_grp, "upperbound_logWb")[index])
+
+    window_params$logDb_hat = var.get.nc(n_grp, "logDb_hat")[indexes]
+    window_params$logDb_sd = var.get.nc(n_grp, "logDb_sd")[indexes]
+    window_params$lowerbound_logDb = min(var.get.nc(n_grp, "lowerbound_logDb")[index])
+    window_params$upperbound_logDb = max(var.get.nc(n_grp, "upperbound_logDb")[index])
+
+    window_params$r_hat = exp(var.get.nc(n_grp, "logr_hat")[indexes])
+    window_params$r_sd = exp(var.get.nc(n_grp, "logr_sd")[indexes])
+    window_params$lowerbound_r = min(exp(var.get.nc(n_grp, "lowerbound_logr")[index]))
+    window_params$upperbound_r = max(exp(var.get.nc(n_grp, "upperbound_logr")[index]))
+
+    window_params$logn_hat = var.get.nc(n_grp, "logn_hat")[indexes]
+    window_params$logn_sd = var.get.nc(n_grp, "logn_sd")[indexes]
+    window_params$lowerbound_logn = min(var.get.nc(n_grp, "lowerbound_logn")[index])
+    window_params$upperbound_logn = max(var.get.nc(n_grp, "upperbound_logn")[index])
+    close.nc(sos)
+    tries = 0
+
+
+  },
+      error=function(e) {
+              message('An Error Occurred, reloading sos')
+              close.nc(sos)
+
+
+              print(e)
+              tries = tries - 1
+              Sys.sleep(runif(1, min=10, max=600))
+              sos = reload_sos(sos_file, 5)
+          },
+      warning=function(w) {
+            message('A Warning Occurred')
+            print(w)
+            return(NA)
+      }
+  )
+}
+
+  print("Read was successful...")
+
+  return(list(Q_priors=Q_priors, window_params=window_params))
+
+}
 #' Checks if observation data is valid.
 #'
 #' @param swot_data named list of SWOT observations
