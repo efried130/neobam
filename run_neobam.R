@@ -30,7 +30,7 @@ get_reach_files = function(reaches_json){
 
 
   if (length(args)>=1){
-      reaches_json = file.path(IN_DIR, paste('reaches',strtoi(args[1]),'.json'))
+      reaches_json = file.path(IN_DIR, paste('reaches_',strtoi(args[1]),'.json', sep = ""))
   } else{
       reaches_json = file.path(IN_DIR, 'reaches.json')
   }
