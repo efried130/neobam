@@ -43,8 +43,8 @@ library(ggplot2, lib.loc = "/nas/cee-water/cjgleason/r-lib/",warn.conflicts=FALS
 library(stringr)
 
 #this function does data prep and generate priors
-neobam_priors_and_data= generate_priors(neobam_formatted_data)
-data_and_priors = generate_neobam_priors_and_data(data)
+neobam_priors_and_data= generate_priors(data)
+
 
   neobam_parameters=list(
     reachid=neobam_priors_and_data$reachid,
