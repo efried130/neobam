@@ -163,3 +163,8 @@ output=list('posterior_Q'= hydrograph_posterior,
             'posterior_Q_sd'= hydrograph_posterior_sd,
             'posteriors'=posteriors)
 
+return(output)
+
+  }
+
+
