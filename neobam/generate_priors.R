@@ -1,9 +1,6 @@
 generate_priors=function(parameters){
 
-    setwd(parameters$wd)
-    
-source('prior_functions.R')
-source('neobam_functions.R')
+   
     
 library(settings, lib.loc = "/nas/cee-water/cjgleason/r-lib/",quietly = TRUE,warn.conflicts=FALSE)
 library(whisker, lib.loc = "/nas/cee-water/cjgleason/r-lib/",quietly = TRUE,warn.conflicts=FALSE)
