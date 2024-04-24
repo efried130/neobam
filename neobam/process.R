@@ -85,26 +85,6 @@ data_and_priors = generate_neobam_priors_and_data(data)
     sigma_man=matrix(neobam_priors_and_data$neo_priors$other_priors$sigma_man[1,1],
                      nrow=nrow(neobam_priors_and_data$Hobs),ncol=ncol(neobam_priors_and_data$Hobs)),
     
-    logWb_hat=   neobam_priors_and_data$neo_priors$river_type_priors$logWb_hat,
-    logWb_sd=    neobam_priors_and_data$neo_priors$river_type_priors$logWb_sd,
-    lowerbound_logWb=    neobam_priors_and_data$neo_priors$river_type_priors$lowerbound_logWb,
-    upperbound_logWb=       neobam_priors_and_data$neo_priors$river_type_priors$upperbound_logWb,    
-   
-    logDb_hat=      neobam_priors_and_data$neo_priors$river_type_priors$logDb_hat,
-    logDb_sd=    neobam_priors_and_data$neo_priors$river_type_priors$logDb_sd,
-    lowerbound_logDb=       neobam_priors_and_data$neo_priors$river_type_priors$lowerbound_logDb,
-    upperbound_logDb=       neobam_priors_and_data$neo_priors$river_type_priors$upperbound_logDb,
-   
-    r_hat=       exp(neobam_priors_and_data$neo_priors$river_type_priors$logr_hat),#unlogged
-    r_sd=     exp(neobam_priors_and_data$neo_priors$river_type_priors$logr_sd),#unlogged
-    lowerbound_r=        exp(neobam_priors_and_data$neo_priors$river_type_priors$lowerbound_logr), #unlogged
-    upperbound_r=        exp(neobam_priors_and_data$neo_priors$river_type_priors$upperbound_logr),#unlogged
-    
-    logn_hat=       neobam_priors_and_data$neo_priors$river_type_priors$logn_hat,
-    logn_sd=     neobam_priors_and_data$neo_priors$river_type_priors$logn_sd,
-    lowerbound_logn=        neobam_priors_and_data$neo_priors$river_type_priors$lowerbound_logn,
-    upperbound_logn=        neobam_priors_and_data$neo_priors$river_type_priors$upperbound_logn,
-    
     logQ_hat= neobam_priors_and_data$Q_priors$logQ_hat ,
     lowerbound_logQ= neobam_priors_and_data$Q_priors$lowerbound_logQ,
     upperbound_logQ=neobam_priors_and_data$Q_priors$upperbound_logQ,
@@ -112,26 +92,6 @@ data_and_priors = generate_neobam_priors_and_data(data)
     
 )
 
-  
-neobam_parameters$logbeta_hat=  rep(3.38,times=nrow(neobam_parameters$Wobs))#new_priors$logbeta_hat
-neobam_parameters$logbeta_sd= rep(0.21,times=nrow(neobam_parameters$Wobs)) # new_priors$logbeta_sd
-neobam_parameters$lowerbound_logbeta=2.9
-neobam_parameters$upperbound_logbeta=3.7
-    
-neobam_parameters$betaslope_hat=  rep(-6.65,times=nrow(neobam_parameters$Wobs))#new_priors$logbeta_hat
-neobam_parameters$betaslope_sd= rep(1.25,times=nrow(neobam_parameters$Wobs)) # new_priors$logbeta_sd
-neobam_parameters$lowerbound_betaslope=-10.62
-neobam_parameters$upperbound_betaslope=-4.55
-    
-neobam_parameters$betaint_hat=  rep(2.42,times=nrow(neobam_parameters$Wobs))#new_priors$logbeta_hat
-neobam_parameters$betaint_sd= rep(0.85,times=nrow(neobam_parameters$Wobs)) # new_priors$logbeta_sd
-neobam_parameters$lowerbound_betaint=0.27
-neobam_parameters$upperbound_betaint=3.66
-    
-neobam_parameters$betaint_hat=  rep(2.42,times=nrow(neobam_parameters$Wobs))#new_priors$logbeta_hat
-neobam_parameters$betaint_sd= rep(0.85,times=nrow(neobam_parameters$Wobs)) # new_priors$logbeta_sd
-neobam_parameters$lowerbound_betaint=0.27
-neobam_parameters$upperbound_betaint=3.66
                
 neobam_parameters$r_hat= rep(0.55,times=nrow(neobam_parameters$Wobs))# new_priors$r_hat
 neobam_parameters$r_sd= rep(0.15,times=nrow(neobam_parameters$Wobs)) #new_priors$r_sd
