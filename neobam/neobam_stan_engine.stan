@@ -131,16 +131,6 @@ data {
 
   real lowerbound_logn;
   real upperbound_logn;
- 
-   real lowerbound_logbeta;
-   real upperbound_logbeta;
-   
-      real lowerbound_betaslope;
-   real upperbound_betaslope;
-   
-   
-      real lowerbound_betaint;
-   real upperbound_betaint;
   
   real lowerbound_logDb;
   real upperbound_logDb;
@@ -155,10 +145,6 @@ data {
   // Hyperparameters
   vector[nt] logQ_hat; // prior mean on logQ
 
-  //real logbeta_hat[nx];
-  //real betaslope_hat[nx];
-  //real betaint_hat[nx];
-  
   real logWb_hat[nx];
   real r_hat[nx];
   real logn_hat[nx];
@@ -169,11 +155,6 @@ data {
   real<lower=0> r_sd[nx];
   real<lower=0> logn_sd[nx];
   real <lower=0> logDb_sd[nx];
-  
-  //real<lower=0> logbeta_sd[nx];
-  //real<lower=0> betaslope_sd[nx];
-  //real<lower=0> betaint_sd[nx];
-
 }
 
 transformed data {
@@ -218,10 +199,6 @@ parameters {
   vector<lower=lowerbound_logWb, upper=upperbound_logWb>[nx] logWb[1];
   vector<lower=lowerbound_logn, upper=upperbound_logn>[nx] logn[1];
   vector<lower=lowerbound_logDb, upper=upperbound_logDb>[nx] logDb[1];
-  
-  //vector<lower=lowerbound_logbeta, upper=upperbound_logbeta>[nx] logbeta[1];
-  // vector<lower=lowerbound_betaslope, upper=upperbound_betaslope>[nx] betaslope[1];
-  // vector<lower=lowerbound_betaint, upper=upperbound_betaint>[nx] betaint[1];
 
   // we'll turn on measurement error later, so these need to be declared as theoretical sampling
   // targets
@@ -267,9 +244,6 @@ model {
   logn[1] ~ normal(logn_hat, logn_sd);
   logWb[1] ~normal(logWb_hat,logWb_sd);
   logDb[1] ~normal(logDb_hat,logDb_sd);
-  //logbeta[1] ~normal(logbeta_hat,logbeta_sd);
-  //betaslope[1] ~normal(betaslope_hat,betaslope_sd);
-  //betaint[1]~normal(betaint_hat,betaint_sd);
  
   //the flow laws
   //observations, or combinations of observations, on the LHS
@@ -277,11 +251,6 @@ model {
 
   // Latent vars for measurement error
   corn_LHS[1] ~ normal(corn_RHS[1], sigma_vec_man); // S meas err
-  //Sact[1] ~ normal(Sobsvec[1],Serr_sd);
-  //Wact[1] ~  normal(Wobsvec[1],Werr_sd);
-  //target += -log(Wact[1]); // Jacobian adjustments
-  //target += -log(Sact[1]);
-  
 
 }
 
