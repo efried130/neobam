@@ -35,44 +35,131 @@
 #' @export
 process_data = function(data, stan_file) {
 
-  # Window sample and parameters
-  windowed = window_mode(data$swot_data$width, data$swot_data$slope2,
-                         data$swot_data$time, GLOBAL_PARAMS$perc_lower,
-                         GLOBAL_PARAMS$perc_upper, GLOBAL_PARAMS$nt_window,
-                         GLOBAL_PARAMS$nx_sample, data$sos_data$window_params)
+library(ncdf4,lib.loc = "/nas/cee-water/cjgleason/r-lib/",quietly=TRUE,warn.conflicts=FALSE)
+library(dplyr,warn.conflicts=FALSE,quietly=TRUE)
+library(tidyr, lib.loc = "/nas/cee-water/cjgleason/r-lib/",warn.conflicts=FALSE,quietly=TRUE)
+library(hydroGOF, lib.loc = "/nas/cee-water/cjgleason/r-lib/",warn.conflicts=FALSE,quietly=TRUE)
+library(ggplot2, lib.loc = "/nas/cee-water/cjgleason/r-lib/",warn.conflicts=FALSE,quietly=TRUE)
+library(stringr)
 
-  # Generate priors
-  neobam_prep_data = NA
-  data_and_priors = generate_neobam_priors_and_data(windowed,
-                                                    data$sos_data$Q_priors,
-                                                    neobam_prep_data,
-                                                    GLOBAL_PARAMS,
-                                                    windowed$priors)
+#this function does data prep and generate priors
+neobam_priors_and_data= generate_priors(neobam_formatted_data)
+data_and_priors = generate_neobam_priors_and_data(data)
 
-  # Execute neoBAM three times
-  #cl <- makeCluster(3)
-  #registerDoParallel(cl)
-  #print('here is the stan file')
-  #print(stan_file)
-  #posteriors = foreach(index=1:3, .combine='c', .export=c("execute_neobam", "run_neobam")) %dopar%
-  #  execute_neobam(neobam_data_and_priors=data_and_priors, sourcefile=stan_file)
-#
-  # Generate discharge time series
- # discharge = foreach(index=1:3, .combine='c', .export=c("retrieve_discharge", "remake_discharge")) %dopar%
-  #  retrieve_discharge(index, width=data$swot_data$width, slope2=data$swot_data$slope2, posteriors=posteriors)
-  #stopCluster(cl)
+  neobam_parameters=list(
+    reachid=neobam_priors_and_data$reachid,
+    date=neobam_priors_and_data$date,
+    Hobs=neobam_priors_and_data$Hobs,
+    Sobs=neobam_priors_and_data$Sobs,
+    Wobs=neobam_priors_and_data$Wobs,
+                            
+    Wdiffobs=neobam_priors_and_data$Wdiffobs,
+    dHobs=neobam_priors_and_data$dHobs,
+    dAobs=neobam_priors_and_data$dAobs,  
+    dAdWobs=neobam_priors_and_data$dAdWobs,
+    dHdWobs=neobam_priors_and_data$dHdWobs,
+    
+    perc_lower=  0.1, #outliers
+    perc_upper=  0.9, 
+    nt_window=  ncol(neobam_priors_and_data$Hobs),
+    
+    #performative variables
+    nx=nrow(neobam_priors_and_data$Hobs),
+    nt=ncol(neobam_priors_and_data$Hobs),
+    
+    logHerr_sd=    norm_to_lognorm(mean(neobam_priors_and_data$Hobs,na.rm=T),0.10)$sigma, #10cm
+    logdHerr_sd=   norm_to_lognorm(mean(neobam_priors_and_data$dHobs,na.rm=T),0.10)$sigma,
+    logWerr_sd=    norm_to_lognorm(mean(neobam_priors_and_data$Wobs,na.rm=T),100)$sigma,
+    logdWerr_sd=   norm_to_lognorm(mean(neobam_priors_and_data$dAobs,na.rm=T),(100))$sigma, #height error *width error, loggee
+    
+    Herr_sd=    0.10, #10cm
+    dHerr_sd=   0.10,
+    Werr_sd=    20,
+    dWerr_sd=   20,
+    Serr_sd=    0.00001, 
+    
+    iter=     3000,
+    
+    ntot=neobam_priors_and_data$ntot,
+    hasdat=neobam_priors_and_data$hasdat,
+    sigma_man=matrix(neobam_priors_and_data$neo_priors$other_priors$sigma_man[1,1],
+                     nrow=nrow(neobam_priors_and_data$Hobs),ncol=ncol(neobam_priors_and_data$Hobs)),
+    
+    logWb_hat=   neobam_priors_and_data$neo_priors$river_type_priors$logWb_hat,
+    logWb_sd=    neobam_priors_and_data$neo_priors$river_type_priors$logWb_sd,
+    lowerbound_logWb=    neobam_priors_and_data$neo_priors$river_type_priors$lowerbound_logWb,
+    upperbound_logWb=       neobam_priors_and_data$neo_priors$river_type_priors$upperbound_logWb,    
+   
+    logDb_hat=      neobam_priors_and_data$neo_priors$river_type_priors$logDb_hat,
+    logDb_sd=    neobam_priors_and_data$neo_priors$river_type_priors$logDb_sd,
+    lowerbound_logDb=       neobam_priors_and_data$neo_priors$river_type_priors$lowerbound_logDb,
+    upperbound_logDb=       neobam_priors_and_data$neo_priors$river_type_priors$upperbound_logDb,
+   
+    r_hat=       exp(neobam_priors_and_data$neo_priors$river_type_priors$logr_hat),#unlogged
+    r_sd=     exp(neobam_priors_and_data$neo_priors$river_type_priors$logr_sd),#unlogged
+    lowerbound_r=        exp(neobam_priors_and_data$neo_priors$river_type_priors$lowerbound_logr), #unlogged
+    upperbound_r=        exp(neobam_priors_and_data$neo_priors$river_type_priors$upperbound_logr),#unlogged
+    
+    logn_hat=       neobam_priors_and_data$neo_priors$river_type_priors$logn_hat,
+    logn_sd=     neobam_priors_and_data$neo_priors$river_type_priors$logn_sd,
+    lowerbound_logn=        neobam_priors_and_data$neo_priors$river_type_priors$lowerbound_logn,
+    upperbound_logn=        neobam_priors_and_data$neo_priors$river_type_priors$upperbound_logn,
+    
+    logQ_hat= neobam_priors_and_data$Q_priors$logQ_hat ,
+    lowerbound_logQ= neobam_priors_and_data$Q_priors$lowerbound_logQ,
+    upperbound_logQ=neobam_priors_and_data$Q_priors$upperbound_logQ,
+    logQ_sd= neobam_priors_and_data$Q_priors$logQ_sd
+    
+)
 
-  #return(list(discharge=discharge, posteriors=posteriors))
   
-# 2/21/24 remaking in serial to save $$$ on AWS. need to return a named list of lists
+neobam_parameters$logbeta_hat=  rep(3.38,times=nrow(neobam_parameters$Wobs))#new_priors$logbeta_hat
+neobam_parameters$logbeta_sd= rep(0.21,times=nrow(neobam_parameters$Wobs)) # new_priors$logbeta_sd
+neobam_parameters$lowerbound_logbeta=2.9
+neobam_parameters$upperbound_logbeta=3.7
+    
+neobam_parameters$betaslope_hat=  rep(-6.65,times=nrow(neobam_parameters$Wobs))#new_priors$logbeta_hat
+neobam_parameters$betaslope_sd= rep(1.25,times=nrow(neobam_parameters$Wobs)) # new_priors$logbeta_sd
+neobam_parameters$lowerbound_betaslope=-10.62
+neobam_parameters$upperbound_betaslope=-4.55
+    
+neobam_parameters$betaint_hat=  rep(2.42,times=nrow(neobam_parameters$Wobs))#new_priors$logbeta_hat
+neobam_parameters$betaint_sd= rep(0.85,times=nrow(neobam_parameters$Wobs)) # new_priors$logbeta_sd
+neobam_parameters$lowerbound_betaint=0.27
+neobam_parameters$upperbound_betaint=3.66
+    
+neobam_parameters$betaint_hat=  rep(2.42,times=nrow(neobam_parameters$Wobs))#new_priors$logbeta_hat
+neobam_parameters$betaint_sd= rep(0.85,times=nrow(neobam_parameters$Wobs)) # new_priors$logbeta_sd
+neobam_parameters$lowerbound_betaint=0.27
+neobam_parameters$upperbound_betaint=3.66
+               
+neobam_parameters$r_hat= rep(0.55,times=nrow(neobam_parameters$Wobs))# new_priors$r_hat
+neobam_parameters$r_sd= rep(0.15,times=nrow(neobam_parameters$Wobs)) #new_priors$r_sd
+neobam_parameters$lowerbound_r=0.3
+neobam_parameters$upperbound_r=1
+    
+neobam_parameters$logWb_hat= rep(6.44,times=nrow(neobam_parameters$Wobs))# new_priors$r_hat
+neobam_parameters$logWb_sd= rep(1.22,times=nrow(neobam_parameters$Wobs)) #new_priors$r_sd
+neobam_parameters$lowerbound_logWb=4.4
+neobam_parameters$upperbound_logWb=9.95 
+    
+neobam_parameters$logDb_hat= rep(2.36,times=nrow(neobam_parameters$Wobs))# new_priors$r_hat
+neobam_parameters$logDb_sd= rep(0.83,times=nrow(neobam_parameters$Wobs)) #new_priors$r_sd
+neobam_parameters$lowerbound_logDb=-0.03
+neobam_parameters$upperbound_logDb=3.85 
+    
+neobam_parameters$logn_hat= rep(log(0.03),times=nrow(neobam_parameters$Wobs))# new_priors$r_hat
+neobam_parameters$logn_sd= rep(0.1,times=nrow(neobam_parameters$Wobs)) #new_priors$r_sd
 
-discharge=vector(mode='list', length=3)
-  posteriors=vector(mode='list', length=3)
-  for (i in 1:3){
-      posteriors[[i]]=(run_neobam(neobam_data_and_priors=data_and_priors, sourcefile= stan_file))
-      discharge[[i]]=remake_discharge(Wobs=data$swot_data$width, Sobs=data$swot_data$slope2, posteriors=posteriors[[i]])
-    }
+fit_out = run_neobam_stan(neobam_parameters,sourcefile)
 
-  return(list(discharge=discharge, posteriors=posteriors))
+posteriors=fit_out$posteriors
+hydrograph_posterior=fit_out$hydrograph_posterior$mean #in time order from Craig's functions
+hydrograph_posterior_sd=  fit_out$hydrograph_posterior$sd
   
-}
+hydrograph_recon= remake_discharge(Wobs=neobam_parameters$Wobs,Sobs=neobam_parameters$Sobs,posteriors=posteriors) #lin space
+
+output=list('posterior_Q'= hydrograph_posterior,
+            'posterior_Q_sd'= hydrograph_posterior_sd,
+            'posteriors'=posteriors)
+
