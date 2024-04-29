@@ -58,7 +58,7 @@ iter=neobam_data_and_priors$iter
   posteriors=lapply(posterior_list,return_posterior_mean_sd,output)
   names(posteriors)=posterior_list
     
-    hydrograph_posterior=exp(posteriors$logQ)
+    hydrograph_posterior=exp(posteriors$logQ$mean)
     
     # posteriors$logbeta$mean = (posteriors$r$mean * posteriors$betaslope$mean) + posteriors$betaint$mean
     # posteriors$logbeta$sd = (posteriors$r$sd * posteriors$betaslope$sd) + posteriors$betaint$sd
