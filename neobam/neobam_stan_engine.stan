@@ -84,6 +84,19 @@ functions {
     }
     return(out[1:ind]);
   }
+  
+  vector vector_pow(vector vector1, vector vector2){
+      vector[num_elements(vector1)] out;
+     int N;
+     N=num_elements(vector1);
+     
+     for (i in 1:N) {
+        out[i] = pow(vector1[i],vector2[i]);
+      }
+      
+      return(out);
+  
+  }
 }
 
 data {
@@ -96,18 +109,22 @@ data {
   int<lower=0,upper=1> hasdat[nx, nt]; // matrix of 0 (missing), 1 (not missing)
 
   // *Actual* data
-  vector[nt] Wobs[nx]; // measured widths, including placeholders for missing
-  vector[nt] Sobs[nx]; // measured slopes
+  vector[nt] Sobs[nx];
+  vector[nt] Wobs[nx];
+  
 
-  real<lower=0> Werr_sd;
+  real<lower=0> Herr_sd;
   real<lower=0> Serr_sd;
+  real<lower=0> dWerr_sd;
+  real<lower=0> dHerr_sd;
+  real<lower=0> Werr_sd;
+  
+  real<lower=0> logHerr_sd;
+  real<lower=0> logWerr_sd;
 
   // Hard bounds on parameters
   real lowerbound_logQ;
   real upperbound_logQ;
-
-  real lowerbound_logWb;
-  real upperbound_logWb;
 
   real lowerbound_r;
   real upperbound_r;
@@ -117,24 +134,27 @@ data {
   
   real lowerbound_logDb;
   real upperbound_logDb;
+  
+  real lowerbound_logWb;
+  real upperbound_logWb;
+
 
   // *Known* likelihood parameters
   vector<lower=0>[nt] sigma_man[nx];
 
   // Hyperparameters
   vector[nt] logQ_hat; // prior mean on logQ
+
   real logWb_hat[nx];
   real r_hat[nx];
   real logn_hat[nx];
   real logDb_hat[nx];
- 
 
   vector<lower=0>[nt] logQ_sd;
   real<lower=0> logWb_sd[nx];
   real<lower=0> r_sd[nx];
   real<lower=0> logn_sd[nx];
   real <lower=0> logDb_sd[nx];
-
 }
 
 transformed data {
@@ -147,20 +167,23 @@ transformed data {
   // we could, I suppose, accept the log transform as an input directly
   vector[ntot] Sobsvec;
   vector[ntot] Wobsvec;
-
   vector[ntot] logSobsvec;
   vector[ntot] logWobsvec;
-
   vector[ntot] sigma_vec_man;
 
   // convert pseudo-ragged arrays to vectors
-  Wobsvec = ragged_vec(Wobs, hasdat);
   Sobsvec = ragged_vec(Sobs, hasdat);
-
+  Wobsvec= ragged_vec(Wobs,hasdat);
+  
+   // convert pseudo-ragged arrays to vectors
   logWobsvec = log(Wobsvec);
   logSobsvec = log(Sobsvec);
 
+
+  
   sigma_vec_man = ragged_vec(sigma_man, hasdat);
+  
+
 }
 
 parameters {
@@ -168,6 +191,8 @@ parameters {
   // in essence, what are the important terms we need to run the MCMC?
   // DOES NOT INCLUDE OBSERVED DATA
   // pure declaration here, no manipulation
+  
+  //db, wb, r,n, Q are pure parameters
 
   vector<lower=lowerbound_logQ,upper=upperbound_logQ>[nt] logQ;
   vector<lower=lowerbound_r, upper=upperbound_r>[nx] r[1];
@@ -175,54 +200,60 @@ parameters {
   vector<lower=lowerbound_logn, upper=upperbound_logn>[nx] logn[1];
   vector<lower=lowerbound_logDb, upper=upperbound_logDb>[nx] logDb[1];
 
-  vector<lower=0>[ntot] Wact[1];
+  // we'll turn on measurement error later, so these need to be declared as theoretical sampling
+  // targets
   vector<lower=0>[ntot] Sact[1];
+  vector<lower=0>[ntot] Wact[1];
+  
 }
 
 transformed parameters {
   // in this block we write the algebraic expressions that will form
   // the basis of the sampling later in the 'model' block.
-
   // we can pull in anything from data, transformed data, or parameters
 
-  //dimension block for this low level language
+  //low level language- declare variables
+  vector[ntot] logQ_S[1]; // location-repeated logQ
+  vector[ntot] logS_RHS[1];  // Sobs
+  vector[nx] logbeta[1];  // Sobs
+  vector[ntot] corn_LHS[1];
+  vector[ntot] corn_RHS[1];
+  
+   
+  logQ_S[1]=ragged_row(logQ, hasdat);
+  
+  logbeta[1]= ragged_col(logDb[1],hasdat) -( ragged_col(r[1],hasdat) .* ( ragged_col(logWb[1],hasdat)) ) ;
 
-  vector[ntot] logQ_RHS[1];
-  logQ_RHS[1] = (rep_vector(1,ntot)./((1.67*ragged_col(r[1], hasdat))+ rep_vector(1,ntot))) .*
-                    ( (ragged_row(logQ, hasdat)) +
-                      (ragged_col(logn[1], hasdat) )    -  
-                      (1.67* ragged_col(logDb[1], hasdat))  +
-                      (1.67* (log( (ragged_col(r[1],hasdat) +rep_vector(1,ntot)) ./  ragged_col(r[1], hasdat) ) ) ) +
-                      (1.67* ragged_col(r[1], hasdat).*ragged_col(logWb[1], hasdat) )  -
-                      (0.5*(log(Sact[1])))    );
-
-
-
-
-
+  //make it happen
+  
+ corn_LHS[1] = logSobsvec +  (logWobsvec .*((3.33*ragged_col(r[1],hasdat)) + rep_vector(2,ntot))) ;
+ corn_RHS[1] = (rep_vector(2,ntot).*(logQ_S[1]) ) +
+               (rep_vector(2,ntot).*(ragged_col(logn[1],hasdat))) -
+               (3.33*ragged_col(logbeta[1],hasdat)) -
+               (3.33* log(ragged_col(r[1],hasdat)./ (ragged_col(r[1],hasdat) + rep_vector(1,ntot))))  ;
+                    
 }
 
 model {
   // Priors
-  //these  models are all to sample priors
-  //each prior gets a posterior conditioned on our prior expectations
+  // these are the 'pure priors'. they are only informed indirectly through the sampling of the 
+  // flow law later on. Constrained by input operations
+  
   logQ ~ normal(logQ_hat, logQ_sd);
-  logWb[1] ~ normal(logWb_hat, logWb_sd);
   r[1] ~ normal(r_hat, r_sd);
   logn[1] ~ normal(logn_hat, logn_sd);
+  logWb[1] ~normal(logWb_hat,logWb_sd);
   logDb[1] ~normal(logDb_hat,logDb_sd);
-  
-  //the flow law
-  logWobsvec[1]~normal(logQ_RHS[1],sigma_vec_man);
-
+ 
+  //the flow laws
+  //observations, or combinations of observations, on the LHS
+  //the flow law on the RHS
 
   // Latent vars for measurement error
-  Wact[1] ~ normal(Wobsvec[1], Werr_sd); // W meas err
-  Sact[1] ~ normal(Sobsvec[1], Serr_sd); // S meas err
-
-
+  corn_LHS[1] ~ normal(corn_RHS[1], sigma_vec_man); // S meas err
 
 }
+
 
 
 

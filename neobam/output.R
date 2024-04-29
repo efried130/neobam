@@ -30,11 +30,9 @@ concatenate_invalid = function(discharge, invalid_times) {
 #' @param chain integer number of neoBAM run
 #' @param nc_out NetCDF file pointer to write to
 #' @param posteriors list of posteriors
-write_posteriors = function(chain, nc_out, posteriors) {
+write_posteriors = function(nc_out, posteriors) {
 
   # Chain
-  mean = paste0("mean", chain)
-  sd = paste0("sd", chain)
 
   # Posteriors
   r = tryCatch(
@@ -43,10 +41,10 @@ write_posteriors = function(chain, nc_out, posteriors) {
   )
   var.def.nc(r, mean, "NC_DOUBLE", NA)
   att.put.nc(r, mean, "_FillValue", "NC_DOUBLE", FILL)
-  var.put.nc(r, mean, posteriors[[chain]]$r$mean)
+  var.put.nc(r, mean, posteriors$r$mean)
   var.def.nc(r, sd, "NC_DOUBLE", NA)
   att.put.nc(r, sd, "_FillValue", "NC_DOUBLE", FILL)
-  var.put.nc(r, sd, posteriors[[chain]]$r$sd)
+  var.put.nc(r, sd, posteriors$r$sd)
 
   logn = tryCatch(
     error = function(cond) grp.def.nc(nc_out, "logn"),
@@ -54,10 +52,10 @@ write_posteriors = function(chain, nc_out, posteriors) {
   )
   var.def.nc(logn, mean, "NC_DOUBLE", NA)
   att.put.nc(logn, mean, "_FillValue", "NC_DOUBLE", FILL)
-  var.put.nc(logn, mean, posteriors[[chain]]$logn$mean)
+  var.put.nc(logn, mean, posteriors$logn$mean)
   var.def.nc(logn, sd, "NC_DOUBLE", NA)
   att.put.nc(logn, sd, "_FillValue", "NC_DOUBLE", FILL)
-  var.put.nc(logn, sd, posteriors[[chain]]$logn$sd)
+  var.put.nc(logn, sd, posteriors$logn$sd)
 
   logWb = tryCatch(
     error = function(cond) grp.def.nc(nc_out, "logWb"),
@@ -65,10 +63,10 @@ write_posteriors = function(chain, nc_out, posteriors) {
   )
   var.def.nc(logWb, mean, "NC_DOUBLE", NA)
   att.put.nc(logWb, mean, "_FillValue", "NC_DOUBLE", FILL)
-  var.put.nc(logWb, mean, posteriors[[chain]]$logWb$mean)
+  var.put.nc(logWb, mean, posteriors$logWb$mean)
   var.def.nc(logWb, sd, "NC_DOUBLE", NA)
   att.put.nc(logWb, sd, "_FillValue", "NC_DOUBLE", FILL)
-  var.put.nc(logWb, sd, posteriors[[chain]]$logWb$sd)
+  var.put.nc(logWb, sd, posteriors$logWb$sd)
 
   logDb = tryCatch(
     error = function(cond) grp.def.nc(nc_out, "logDb"),
@@ -76,10 +74,10 @@ write_posteriors = function(chain, nc_out, posteriors) {
   )
   var.def.nc(logDb, mean, "NC_DOUBLE", NA)
   att.put.nc(logDb, mean, "_FillValue", "NC_DOUBLE", FILL)
-  var.put.nc(logDb, mean, posteriors[[chain]]$logDb$mean)
+  var.put.nc(logDb, mean, posteriors$logDb$mean)
   var.def.nc(logDb, sd, "NC_DOUBLE", NA)
   att.put.nc(logDb, sd, "_FillValue", "NC_DOUBLE", FILL)
-  var.put.nc(logDb, sd, posteriors[[chain]]$logDb$sd)
+  var.put.nc(logDb, sd, posteriors$logDb$sd)
 
 }
 
@@ -91,7 +89,7 @@ write_posteriors = function(chain, nc_out, posteriors) {
 write_discharge = function(chain, nc_out, discharge) {
 
   # Chain
-  name = paste0("q", chain)
+
 
   # Discharge
   q = tryCatch(
@@ -100,8 +98,8 @@ write_discharge = function(chain, nc_out, discharge) {
   )
   var.def.nc(q, name, "NC_DOUBLE", "nt")
   att.put.nc(q, name, "_FillValue", "NC_DOUBLE", FILL)
-  discharge[[chain]][is.nan(discharge[[chain]])] = NA
-  var.put.nc(q, name, discharge[[chain]])
+  discharge[is.nan(discharge)] = NA
+  var.put.nc(q, name, discharge)
 }
 
 #' Write discharge and posteriors to NetCDF file.
