@@ -8,7 +8,11 @@
 
 
 # Functions
-#travis- i got ride of a /app/ at the start of this
+# source("/app/neobam/input.R")
+# source("/app/neobam/neobam_functions.R")
+# source("/app/neobam/output.R")
+# source("/app/neobam/process.R")
+
 source("neobam/input.R")
 source("neobam/neobam_functions.R")
 source("neobam/output.R")
@@ -79,24 +83,30 @@ main = function() {
    
   # Process
   if (in_data$valid != FALSE) {
-    process_data = process_data(in_data, STAN_FILE)
-      print(process_data)
+    neobam_output = process_data(in_data, STAN_FILE)
+neobam_output$thisisdumb==0
     out_data = list(reach_id = io_data$reach_id,
                     nt = in_data$swot_data$nt,
                     invalid_nodes = in_data$invalid_nodes,
                     invalid_times = in_data$invalid_times)
   } else {
-    process_data = create_invalid_out(length(in_data$nt))
+   
+    neobam_output = create_invalid_out(length(in_data$nt))
+      neobam_output$thisisdumb=1
     out_data = list(reach_id = io_data$reach_id,
                     nt = in_data$nt,
                     invalid_nodes = vector(mode = "list"),
                     invalid_times = vector(mode = "list"))
   }
+    
+   
 
   # Write output
-  # write_output(out_data, process_data$posteriors, process_data$discharge, OUT_DIR)
+  # write_output(out_data, neobam_output$posteriors, neobam_output$posterior_Q, OUT_DIR)
   end = Sys.time()
   print(paste("Total execution time for reach", io_data$reach_id, ":", (end - start), "seconds."))
+    
+    return(list(c(neobam_output,out_data,thisisdumb)))
 }
 
-main()
+neobam_output=main()

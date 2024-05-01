@@ -4,9 +4,7 @@
 #' SWOT: node/time, node/width, node/slope2
 
 # Libraries
-
-library(ncdf4)
-
+library(RNetCDF,lib.loc='/home/cjgleason_umass_edu/.conda/pkgs/r-rnetcdf-2.6_2-r42h498a2f1_0/lib/R/library/',quietly=TRUE,warn.conflicts = FALSE)
 #' Title
 #'
 #' @param swot_file string path to SWOT NetCDF file
@@ -29,7 +27,8 @@ get_input = function(swot_file, sos_file, reach_id) {
   # Return list of valid observations
   if (length(data) == 0) {
     print('in get_input(), neobam has decided the data are invalid')
-    return(list(valid=FALSE, reach_id=reach_id, nx=swot_data$nx, nt=swot_data$nt))
+     
+    return(list(valid=FALSE, reach_id=reach_id, nx=swot_data$nx, nt=swot_data$nt, thisisdumb=1))
   } else {
     # Create a list of data with reach identifier
     return(list(valid=TRUE, reach_id = reach_id, swot_data=data$swot_data,
@@ -44,67 +43,52 @@ get_input = function(swot_file, sos_file, reach_id) {
 #'
 #' @return list of width, slope2, and time matrices
 get_swot = function(swot_file) {
-    
-    
-#   swot = open.nc(swot_file)
-#   nx = var.get.nc(swot, "nx")
-#   nt = var.get.nc(swot, "nt")
+  swot = open.nc(swot_file)
+  nx = var.get.nc(swot, "nx")
+  nt = var.get.nc(swot, "nt")
 
-#   node_grp = grp.inq.nc(swot, "node")$self
-#   width = t(var.get.nc(node_grp, "width"))
-#   slope2 = t(var.get.nc(node_grp, "slope2"))
-#   time = t(var.get.nc(node_grp, "time"))
+  node_grp = grp.inq.nc(swot, "reach")$self
+  width = t(var.get.nc(node_grp, "width"))
+  slope2 = t(var.get.nc(node_grp, "slope2"))
+  time = t(var.get.nc(node_grp, "time"))
+    
 
-#   close.nc(swot)
-    swot=nc_open(swot_file)
-    
-    # print(swot)
-    # test=ncatt_get(swot,'nx')
-    # print(test)
-    
-    nx=ncvar_get(swot,'nx')
-    nt=ncvar_get(swot,'nt')
-    width=t(ncvar_get(swot,'node/width'))
-    slope2=t(ncvar_get(swot,'node/slope2'))
-    time=t(ncvar_get(swot,'node/time'))
-    nc_close(swot)
-  
-    
-    
+
+  close.nc(swot)
 
   return(list(nx=nx, nt=nt, width=width, slope2=slope2, time=time))
 
 }
 
-# reload_sos = function(sos_file, retry_number){
-#   tries = retry_number
-#   while (tries > 0){
-#     tryCatch (
-#       {
-#         sos = nc_open(sos_file)
-#         print("sos loaded...")
-#         tries = 0
+reload_sos = function(sos_file, retry_number){
+  tries = retry_number
+  while (tries > 0){
+    tryCatch (
+      {
+        sos = open.nc(sos_file)
+        # print("sos loaded...")
+        tries = 0
 
-#       },
-#       error=function(e) {
-#               message('An Error Occurred')
-#               # print(e)
-#               tries = tries - 1
-#               # Sys.sleep(runif(1, min=100, max=500))
+      },
+      error=function(e) {
+              message('An Error Occurred')
+              # print(e)
+              tries = tries - 1
+              Sys.sleep(runif(1, min=100, max=500))
 
-#           },
-#       warning=function(w) {
-#             message('A Warning Occurred')
-#             # print(w)
-#             return(NA)
+          },
+      warning=function(w) {
+            message('A Warning Occurred')
+            # print(w)
+            return(NA)
         
-#   }
-#     )
+  }
+    )
 
-#   }
-#   return(sos)
+  }
+  return(sos)
 
-# }
+}
 
 
 #' Retrieve SOS data.
@@ -115,80 +99,87 @@ get_swot = function(swot_file) {
 #' @return list of Q priors
 #' @export
 get_sos = function(sos_file, reach_id) {
- 
+
   Q_priors = list()
-
-  sos = nc_open(sos_file)
+  sos = reload_sos(sos_file, 5)
   # print('loaded sos...')
- 
+  # print(sos)
 
-  # tries = 5
-  # while (tries >0){
-  #   tryCatch ( {
-  #   print('trying...')
-  #   # reach_grp = grp.inq.nc(sos, "reaches")$self
-  #   # rids = var.get.nc(reach_grp, "reach_id")
-    rids=ncvar_get(sos,'reaches/reach_id')
+
+  tries = 5
+  while (tries >0){
+    tryCatch ( {
+    # print('trying...')
+    reach_grp = grp.inq.nc(sos, "reaches")$self
+    rids = var.get.nc(reach_grp, "reach_id")
     index = which(rids == reach_id, arr.ind=TRUE)
 
-    # node_grp = grp.inq.nc(sos, "nodes")$self
-    # nrids = var.get.nc(node_grp, "reach_id")
-    nrids= ncvar_get(sos,'nodes/reach_id')
+    node_grp = grp.inq.nc(sos, "nodes")$self
+    nrids = var.get.nc(node_grp, "reach_id")
     indexes = which(nrids == reach_id, arr.ind=TRUE)
 
-    # model_grp = grp.inq.nc(sos, "model")$self
+    model_grp = grp.inq.nc(sos, "model")$self
     # print("made it to the model group")
     # print(model_grp)
-    # Q_priors$logQ_hat = log(var.get.nc(model_grp, "mean_q")[index])
-    # Q_priors$upperbound_logQ = log(var.get.nc(model_grp, "max_q")[index])
-    # min_q = var.get.nc(model_grp, "min_q")[index]   # Check action taken
-        
-        
-        
-    Q_priors$logQ_hat = log(ncvar_get(sos,'model/mean_q')[index])
-    Q_priors$upperbound_logQ = log(ncvar_get(sos,'model/max_q')[index])
-    min_q = log(ncvar_get(sos,'model/min_q')[index])
+    Q_priors$logQ_hat = log(var.get.nc(model_grp, "mean_q")[index])
+    Q_priors$upperbound_logQ = log(var.get.nc(model_grp, "max_q")[index])
+    min_q = var.get.nc(model_grp, "min_q")[index]   # Check action taken
     if ((min_q < 0) | (is.na(min_q))) {
       Q_priors$lowerbound_logQ = NA
     } else {
       Q_priors$lowerbound_logQ = log(min_q)
     }
 
-    # r_grp = grp.inq.nc(sos, "gbpriors/reach")$self
-    # Q_priors$logQ_sd = var.get.nc(r_grp, "logQ_sd")[index]
-        
-    Q_priors$logQ_sd=ncvar_get(sos,'gbpriors/reach/logQ_sd')[index]
-        
-        nc_close(sos)
-       
+    r_grp = grp.inq.nc(sos, "gbpriors/reach")$self
+    Q_priors$logQ_sd = var.get.nc(r_grp, "logQ_sd")[index]
+
+    window_params = list()
+    n_grp = grp.inq.nc(sos, "gbpriors/node")$self
+    window_params$logWb_hat = var.get.nc(n_grp, "logWb_hat")[indexes]
+    window_params$logWb_sd = var.get.nc(n_grp, "logWb_sd")[indexes]
+    window_params$lowerbound_logWb = min(var.get.nc(n_grp, "lowerbound_logWb")[index])
+    window_params$upperbound_logWb = max(var.get.nc(n_grp, "upperbound_logWb")[index])
+
+    window_params$logDb_hat = var.get.nc(n_grp, "logDb_hat")[indexes]
+    window_params$logDb_sd = var.get.nc(n_grp, "logDb_sd")[indexes]
+    window_params$lowerbound_logDb = min(var.get.nc(n_grp, "lowerbound_logDb")[index])
+    window_params$upperbound_logDb = max(var.get.nc(n_grp, "upperbound_logDb")[index])
+
+    window_params$r_hat = exp(var.get.nc(n_grp, "logr_hat")[indexes])
+    window_params$r_sd = exp(var.get.nc(n_grp, "logr_sd")[indexes])
+    window_params$lowerbound_r = min(exp(var.get.nc(n_grp, "lowerbound_logr")[index]))
+    window_params$upperbound_r = max(exp(var.get.nc(n_grp, "upperbound_logr")[index]))
+
+    window_params$logn_hat = var.get.nc(n_grp, "logn_hat")[indexes]
+    window_params$logn_sd = var.get.nc(n_grp, "logn_sd")[indexes]
+    window_params$lowerbound_logn = min(var.get.nc(n_grp, "lowerbound_logn")[index])
+    window_params$upperbound_logn = max(var.get.nc(n_grp, "upperbound_logn")[index])
+    close.nc(sos)
+    tries = 0
 
 
-#     close.nc(sos)
-#     tries = 0
+  },
+      error=function(e) {
+              message('An Error Occurred, reloading sos')
+              close.nc(sos)
 
 
-#   },
-#       error=function(e) {
-#               message('An Error Occurred, reloading sos')
-#               nc_close(sos)
+              # print(e)
+              tries = tries - 1
+              Sys.sleep(runif(1, min=10, max=600))
+              sos = reload_sos(sos_file, 5)
+          },
+      warning=function(w) {
+            message('A Warning Occurred')
+            # print(w)
+            return(NA)
+      }
+  )
+}
 
+  # print("Read was successful...")
 
-#               print(e)
-#               tries = tries - 1
-#               Sys.sleep(runif(1, min=10, max=600))
-#               sos = reload_sos(sos_file, 5)
-#           },
-#       warning=function(w) {
-#             message('A Warning Occurred')
-#             print(w)
-#             return(NA)
-#       }
-  
-# }
-
-  print("Read was successful...")
-
-  return(list(Q_priors=Q_priors))
+  return(list(Q_priors=Q_priors, window_params=window_params))
 
 }
 #' Checks if observation data is valid.
@@ -212,7 +203,6 @@ check_observations = function(swot_data, sos_data) {
   swot_data$slope2[swot_data$slope2 < 0] = NA
   invalid = get_invalid_nodes_times(swot_data$width, swot_data$slope2, swot_data$time)
 
-  
   # Return valid data (or empty list if invalid)
   return(remove_invalid(swot_data, sos_data, invalid$invalid_nodes, invalid$invalid_times))
 }
@@ -308,7 +298,7 @@ get_invalid = function(obs) {
 
   # Determine invalid nx and nt for obs
   invalid_nodes = rowSums(is.na(obs)) >= (ncol(obs) - 5)
-  invalid_times = colSums(is.na(obs)) >= (nrow(obs) - 3)
+  invalid_times = colSums(is.na(obs)) >= (nrow(obs) - 5)
   return(list(invalid_nodes=invalid_nodes, invalid_times=invalid_times))
 
 }

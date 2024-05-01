@@ -4,7 +4,7 @@
 #library(parallel)
 #library(doParallel)
 
-#' Execute neoBAM
+#' Execute neoBAMd
 #'
 #' @param neobam_data_and_priors named list of SWOT data, priors, and parameters
 #' @param sourcefile string path to .stan file
@@ -64,7 +64,7 @@ library(stringr)
     logWerr_sd=    norm_to_lognorm(mean(data$swot_data$width,na.rm=T),20)$sigma,
     logSerr_sd=  norm_to_lognorm(mean(data$swot_data$width,na.rm=T),0.00001)$sigma,
     
-      iter=     500
+      iter=     2000
 
 
     
@@ -116,7 +116,7 @@ neobam_parameters$upperbound_logn=log(0.05)
 fit_out = run_neobam_stan(neobam_parameters,stan_file)
 
 posteriors=fit_out$posteriors
-hydrograph_posterior=fit_out$hydrograph_posterior #already linspace from the other function
+hydrograph_posterior=fit_out$hydrograph_posterior$mean #in time order from Craig's functions
 hydrograph_posterior_sd= exp( fit_out$posteriors$logQ$sd)
   
 hydrograph_recon= remake_discharge(Wobs=neobam_parameters$Wobs,Sobs=neobam_parameters$Sobs,posteriors=posteriors) #lin space

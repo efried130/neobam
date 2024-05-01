@@ -6,6 +6,7 @@ run_neobam_stan = function(neobam_data_and_priors,sourcefile){
   library(dplyr,lib.loc = "/nas/cee-water/cjgleason/r-lib/",quietly=TRUE,warn.conflicts = FALSE)
   library(tidyr, lib.loc = "/nas/cee-water/cjgleason/r-lib/",quietly=TRUE,warn.conflicts = FALSE)
   library(stringr,lib.loc = "/nas/cee-water/cjgleason/r-lib/",quietly=TRUE,warn.conflicts = FALSE)
+    library(reshape2)
     
     rstan_options(auto_write = TRUE)
 
@@ -58,7 +59,24 @@ iter=neobam_data_and_priors$iter
   posteriors=lapply(posterior_list,return_posterior_mean_sd,output)
   names(posteriors)=posterior_list
     
-    hydrograph_posterior=exp(posteriors$logQ$mean)
+    chain=1:3
+     alpha <- 1 - 0.95
+    
+   hydrograph_posterior=  rstan::extract(fit1, "logQ", permuted = FALSE) %>%
+    reshape2::melt()%>%
+    dplyr::mutate(chains = gsub("^chain:", "", .data$chains)) %>%
+    dplyr::filter(.data$chains %in% chain) %>%
+    dplyr::mutate(value = exp(.data$value)) %>%
+    dplyr::group_by(.data$parameters) %>%
+    dplyr::summarize(mean = mean(.data$value),
+              conf.low = quantile(.data$value, alpha / 2),
+              conf.high = quantile(.data$value, 1 - (alpha / 2)),
+              sd = sd(.data$value)) %>%
+    dplyr::rename(time = .data$parameters) %>%
+    dplyr::mutate(time = gsub("^logQ\\[", "", .data$time),
+           time = gsub("\\]$", "", .data$time),
+           time = as.numeric(.data$time)) %>%
+    dplyr::arrange(.data$time)
     
     # posteriors$logbeta$mean = (posteriors$r$mean * posteriors$betaslope$mean) + posteriors$betaint$mean
     # posteriors$logbeta$sd = (posteriors$r$sd * posteriors$betaslope$sd) + posteriors$betaint$sd
