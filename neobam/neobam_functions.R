@@ -1,12 +1,12 @@
 
 run_neobam_stan = function(neobam_data_and_priors,sourcefile){
     
-  library(BH,quietly=TRUE,warn.conflicts = FALSE)
-  library(rstan,lib.loc='/home/cjgleason_umass_edu/.conda/pkgs/r-rstan-2.21.7-r42h7525677_1/lib/R/library/',quietly=TRUE,warn.conflicts = FALSE)
-  library(dplyr,lib.loc = "/nas/cee-water/cjgleason/r-lib/",quietly=TRUE,warn.conflicts = FALSE)
-  library(tidyr, lib.loc = "/nas/cee-water/cjgleason/r-lib/",quietly=TRUE,warn.conflicts = FALSE)
-  library(stringr,lib.loc = "/nas/cee-water/cjgleason/r-lib/",quietly=TRUE,warn.conflicts = FALSE)
-    library(reshape2)
+  # library(BH,quietly=TRUE,warn.conflicts = FALSE)
+  # library(rstan,lib.loc='/home/cjgleason_umass_edu/.conda/pkgs/r-rstan-2.21.7-r42h7525677_1/lib/R/library/',quietly=TRUE,warn.conflicts = FALSE)
+  # library(dplyr,lib.loc = "/nas/cee-water/cjgleason/r-lib/",quietly=TRUE,warn.conflicts = FALSE)
+  # library(tidyr, lib.loc = "/nas/cee-water/cjgleason/r-lib/",quietly=TRUE,warn.conflicts = FALSE)
+  # library(stringr,lib.loc = "/nas/cee-water/cjgleason/r-lib/",quietly=TRUE,warn.conflicts = FALSE)
+  #   library(reshape2)
     
     rstan_options(auto_write = TRUE)
 

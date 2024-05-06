@@ -4,7 +4,7 @@
 #' SWOT: node/time, node/width, node/slope2
 
 # Libraries
-library(RNetCDF,lib.loc='/home/cjgleason_umass_edu/.conda/pkgs/r-rnetcdf-2.6_2-r42h498a2f1_0/lib/R/library/',quietly=TRUE,warn.conflicts = FALSE)
+library(RNetCDF,quietly=TRUE,warn.conflicts = FALSE)
 #' Title
 #'
 #' @param swot_file string path to SWOT NetCDF file
@@ -196,12 +196,21 @@ check_observations = function(swot_data, sos_data) {
   qmin = sos_data$Q_priors$lowerbound_logQ
   qsd = sos_data$Q_priors$logQ_sd
   qhat[qhat < 0] = NA
+  print(qhat)
+  print(qmax)
+  print(qmin)
+  print(qsd)
   if (is.na(qhat[[1]]) || is.na(qmax[[1]]) || is.na(qmin[[1]]) || is.na(qsd[[1]])) { return(vector(mode = "list")) }
 
   # SWOT data
   swot_data$width[swot_data$width < 0] = NA
   swot_data$slope2[swot_data$slope2 < 0] = NA
+  print(swot_data$width)
+  print(swot_data$slope2)
+  print(swot_data$time)
   invalid = get_invalid_nodes_times(swot_data$width, swot_data$slope2, swot_data$time)
+  print('invalid')
+  print(invalid)
 
   # Return valid data (or empty list if invalid)
   return(remove_invalid(swot_data, sos_data, invalid$invalid_nodes, invalid$invalid_times))
@@ -217,6 +226,7 @@ check_observations = function(swot_data, sos_data) {
 get_invalid_nodes_times = function(width, slope2, time) {
 
   invalid_width = get_invalid(width)
+  print(invalid_width)
   invalid_slope2 = get_invalid(slope2)
   invalid_time = get_invalid(time)
   invalid_nodes = unique(c(which(invalid_width$invalid_nodes == TRUE),
@@ -237,19 +247,23 @@ get_invalid_nodes_times = function(width, slope2, time) {
 #'
 #' @return named list of SWOT observations, Q priors, and other priors
 remove_invalid = function(swot_data, sos_data, invalid_nodes, invalid_times){
+  print(invalid_nodes)
 
   # All valid
   if (identical(invalid_nodes, integer(0)) && identical(invalid_times, integer(0))) {
+    print('all valid')
     return(list(swot_data=swot_data, sos_data=sos_data,
                 invalid_nodes=invalid_nodes, invalid_times=invalid_times))
     # Valid nodes
   } else if (identical(invalid_nodes, integer(0))) {
+    print('valid nodes')
     swot_data$width = swot_data$width[, -invalid_times]
     swot_data$slope2 = swot_data$slope2[, -invalid_times]
     swot_data$time = swot_data$time[, -invalid_times]
 
     # Valid time steps
   } else if (identical(invalid_times, integer(0))) {
+    print('valid time')
     swot_data$width = swot_data$width[-invalid_nodes,]
     swot_data$slope2 = swot_data$slope2[-invalid_nodes,]
     swot_data$time = swot_data$time[-invalid_nodes,]
@@ -264,6 +278,7 @@ remove_invalid = function(swot_data, sos_data, invalid_nodes, invalid_times){
 
     # Both invalid
   } else {
+    print('both invalid')
     swot_data$width = swot_data$width[-invalid_nodes, -invalid_times]
     swot_data$slope2 = swot_data$slope2[-invalid_nodes, -invalid_times]
     swot_data$time = swot_data$time[-invalid_nodes, -invalid_times]
@@ -297,8 +312,14 @@ remove_invalid = function(swot_data, sos_data, invalid_nodes, invalid_times){
 get_invalid = function(obs) {
 
   # Determine invalid nx and nt for obs
+  print('')
+  print('hello')
+  print(obs)
   invalid_nodes = rowSums(is.na(obs)) >= (ncol(obs) - 5)
+  print(invalid_nodes)
   invalid_times = colSums(is.na(obs)) >= (nrow(obs) - 5)
+  print(invalid_times)
+  print('')
   return(list(invalid_nodes=invalid_nodes, invalid_times=invalid_times))
 
 }

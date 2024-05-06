@@ -4,7 +4,7 @@
 #' posteriors (mean and sd): r, logn, logWb, logDb
 
 # Libraries
-library(RNetCDF,lib.loc='/home/cjgleason_umass_edu/.conda/pkgs/r-rnetcdf-2.6_2-r42h498a2f1_0/lib/R/library/',quietly=TRUE,warn.conflicts = FALSE)
+# library(RNetCDF,lib.loc='/home/cjgleason_umass_edu/.conda/pkgs/r-rnetcdf-2.6_2-r42h498a2f1_0/lib/R/library/',quietly=TRUE,warn.conflicts = FALSE)
 
 
 # Constants

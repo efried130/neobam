@@ -8,21 +8,23 @@
 
 
 # Functions
-# source("/app/neobam/input.R")
-# source("/app/neobam/neobam_functions.R")
-# source("/app/neobam/output.R")
-# source("/app/neobam/process.R")
+source("/app/neobam/input.R")
+source("/app/neobam/neobam_functions.R")
+source("/app/neobam/output.R")
+source("/app/neobam/process.R")
 
-source("neobam/input.R")
-source("neobam/neobam_functions.R")
-source("neobam/output.R")
-source("neobam/process.R")
+# source("neobam/input.R")
+# source("neobam/neobam_functions.R")
+# source("neobam/output.R")
+# source("neobam/process.R")
 
 # Constants
-IN_DIR = file.path("/nas/cee-water/cjgleason/SWOT_Q_UMASS/mnt",  "input")
-OUT_DIR = file.path("/nas/cee-water/cjgleason/SWOT_Q_UMASS/mnt", "output")
-# STAN_FILE = file.path("/app", "neobam", "neobam_stan_engine.stan")
-STAN_FILE = file.path( "neobam", "neobam_stan_engine.stan")
+# IN_DIR = file.path("/nas/cee-water/cjgleason/SWOT_Q_UMASS/mnt",  "input")
+# OUT_DIR = file.path("/nas/cee-water/cjgleason/SWOT_Q_UMASS/mnt", "output")
+IN_DIR = file.path("/mnt/data/input")
+OUT_DIR = file.path("/mnt/data/output")
+STAN_FILE = file.path("/app", "neobam", "neobam_stan_engine.stan")
+# STAN_FILE = file.path( "neobam", "neobam_stan_engine.stan")
 
 
 #' Identify reach and locate SWOT and SoS files.
@@ -32,18 +34,7 @@ STAN_FILE = file.path( "neobam", "neobam_stan_engine.stan")
 #' @return list of swot file and sos file
 get_reach_files = function(reaches_json){
   # Get reach identifier from array environment variable
-  # index = strtoi(Sys.getenv("AWS_BATCH_JOB_ARRAY_INDEX")) + 1
-  # args = commandArgs(trailingOnly=TRUE)
-
-
-  # if (length(args)>=1){
-  #     reaches_json = file.path(IN_DIR, paste('reaches_',strtoi(args[1]),'.json', sep = ""))
-  # } else{
-  #     reaches_json = file.path(IN_DIR, 'reaches.json')
-  # }
-
-  
-    # reaches_json= '/nas/cee-water/cjgleason/SWOT_Q_UMASS/mnt/input/reaches.json'
+  index = strtoi(Sys.getenv("AWS_BATCH_JOB_ARRAY_INDEX")) + 1
   json_data = rjson::fromJSON(file=file.path(reaches_json))[[index]]
   return(list(reach_id = json_data$reach_id,
               swot_file = file.path(IN_DIR, "swot", json_data$swot),
@@ -73,8 +64,8 @@ main = function() {
   # Identify reach files to process
   start = Sys.time()
   args = commandArgs(trailingOnly=TRUE)
-  # reaches_json = ifelse(identical(args, character(0)), "reaches.json", args[1])
-      reaches_json= '/nas/cee-water/cjgleason/SWOT_Q_UMASS/mnt/input/reaches.json'
+  reaches_json = ifelse(identical(args, character(0)), "/mnt/data/input/reaches.json", args[1])
+      # reaches_json= '/nas/cee-water/cjgleason/SWOT_Q_UMASS/mnt/input/reaches.json'
   io_data = get_reach_files(reaches_json)
     
   # Get Input
@@ -84,7 +75,6 @@ main = function() {
   # Process
   if (in_data$valid != FALSE) {
     neobam_output = process_data(in_data, STAN_FILE)
-neobam_output$thisisdumb==0
     out_data = list(reach_id = io_data$reach_id,
                     nt = in_data$swot_data$nt,
                     invalid_nodes = in_data$invalid_nodes,
@@ -92,7 +82,6 @@ neobam_output$thisisdumb==0
   } else {
    
     neobam_output = create_invalid_out(length(in_data$nt))
-      neobam_output$thisisdumb=1
     out_data = list(reach_id = io_data$reach_id,
                     nt = in_data$nt,
                     invalid_nodes = vector(mode = "list"),
@@ -106,7 +95,7 @@ neobam_output$thisisdumb==0
   end = Sys.time()
   print(paste("Total execution time for reach", io_data$reach_id, ":", (end - start), "seconds."))
     
-    return(list(c(neobam_output,out_data,thisisdumb)))
+    return(list(c(neobam_output,out_data)))
 }
 
 neobam_output=main()
