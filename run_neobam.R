@@ -71,9 +71,10 @@ main = function() {
   # Get Input
   in_data = get_input(io_data$swot_file, io_data$sos_file, io_data$reach_id)
 
-   
+  print('processing data...')
   # Process
   if (in_data$valid != FALSE) {
+    print('data was valid...')
     neobam_output = process_data(in_data, STAN_FILE)
     out_data = list(reach_id = io_data$reach_id,
                     nt = in_data$swot_data$nt,
@@ -91,7 +92,7 @@ main = function() {
    
 
   # Write output
-  # write_output(out_data, neobam_output$posteriors, neobam_output$posterior_Q, OUT_DIR)
+  write_output(out_data, neobam_output$posteriors, neobam_output$posterior_Q, OUT_DIR)
   end = Sys.time()
   print(paste("Total execution time for reach", io_data$reach_id, ":", (end - start), "seconds."))
     
@@ -99,3 +100,4 @@ main = function() {
 }
 
 neobam_output=main()
+print(neobam_output)

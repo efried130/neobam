@@ -15,6 +15,7 @@ library(RNetCDF,quietly=TRUE,warn.conflicts = FALSE)
 #' @export
 get_input = function(swot_file, sos_file, reach_id) {
 
+
   # Get SWOT
   swot_data = get_swot(swot_file)
 
@@ -47,7 +48,7 @@ get_swot = function(swot_file) {
   nx = var.get.nc(swot, "nx")
   nt = var.get.nc(swot, "nt")
 
-  node_grp = grp.inq.nc(swot, "reach")$self
+  node_grp = grp.inq.nc(swot, "node")$self
   width = t(var.get.nc(node_grp, "width"))
   slope2 = t(var.get.nc(node_grp, "slope2"))
   time = t(var.get.nc(node_grp, "time"))
