@@ -48,7 +48,8 @@ get_reach_files = function(reaches_json){
 #' @return named list of discharge and posteriors
 create_invalid_out = function(nt) {
   nt_vector = rep(NA_real_, nt)
-  base_discharge = list(nt_vector, nt_vector, nt_vector)
+  # base_discharge = list(nt_vector, nt_vector, nt_vector)
+  base_discharge = list(nt_vector)
   base_posteriors = list(
     r = list(mean=NA_real_, sd=NA_real_),
     logn = list(mean=NA_real_, sd=NA_real_),
@@ -92,7 +93,7 @@ main = function() {
    
 
   # Write output
-  write_output(out_data, neobam_output$posteriors, neobam_output$posterior_Q, OUT_DIR)
+  write_output(out_data, neobam_output$posteriors, neobam_output$posterior_Q, OUT_DIR, in_data$valid)
   end = Sys.time()
   print(paste("Total execution time for reach", io_data$reach_id, ":", (end - start), "seconds."))
     
