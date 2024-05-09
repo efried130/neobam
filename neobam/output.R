@@ -119,7 +119,8 @@ write_posteriors = function(nc_out, posteriors, is_valid, out_data) {
 #' @param chain integer number that indicates neoBAM run
 #' @param nc_out NetCDF file pointer to write to
 #' @param discharge list of discharge values
-write_discharge = function(nc_out, discharge,is_valid) {
+  # write_output(out_data, neobam_output$posteriors, neobam_output$posterior_Q, neobam_output$posterior_Qsd, in_data$valid)
+write_discharge = function(nc_out, discharge,discharge_sd,is_valid) {
 
   # Chain
 
@@ -133,7 +134,7 @@ write_discharge = function(nc_out, discharge,is_valid) {
   # att.put.nc(q, "name", "_FillValue", "NC_DOUBLE", FILL)
   # discharge[is.nan(discharge)] = NA
   # discharge <- discharge %>% mutate_all(~ifelse(is.nan(.), NA, .))
-  print('discharge')
+
   # print(do.call(rbind,discharge))
   # print(dim(discharge))
 
@@ -142,8 +143,18 @@ write_discharge = function(nc_out, discharge,is_valid) {
   if(is_valid){
       var.put.nc(q, "q", discharge)
 
+  
+
   }else{
     var.put.nc(q,"q",FILL)
+  }
+
+  var.def.nc(q, "q_sd", "NC_DOUBLE", NA)
+  att.put.nc(q, "q_sd", "_FillValue", "NC_DOUBLE", FILL)
+  if(is_valid){
+      var.put.nc(q, "q_sd", discharge_sd)
+  }else{
+    var.put.nc(q,"q_sd",FILL)
   }
 
 }
@@ -156,15 +167,15 @@ write_discharge = function(nc_out, discharge,is_valid) {
 #' @param out_dir string to output directory
 #'
 #' @export
-write_output = function(data, posteriors, discharge, out_dir, is_valid) {
+write_output = function(data, posteriors, discharge,discharge_sd, out_dir, is_valid) {
 
   print('writing output...')
 
 print('here are invalid')
-print(data$invalid_times)
+# print(data$invalid_times)
   # Concatenate invalid times back into discharge
   print('discharge...')
-  print(discharge)
+  print(posteriors)
   # discharge = lapply(discharge, concatenate_invalid, invalid_times=data$invalid_times)
   discharge = concatenate_invalid(discharge, invalid_times = data$invalid_times)
 
@@ -184,7 +195,8 @@ print(data$invalid_times)
   dim.def.nc(nc_out, "nx", length(posteriors$r$mean))
   var.def.nc(nc_out, "nx", "NC_INT", "nx")
   att.put.nc(nc_out, "nx", "units", "NC_STRING", "num_nodes")
-  var.put.nc(nc_out, "nx", data$nt)
+  var.put.nc(nc_out, "nx", seq(from = 0, by = 1, length.out = length(posteriors$r$mean))
+)
 
   # dim.def.nc(nc_out, "_dis?", length(discharge))
   # var.def.nc(nc_out, "_dis?", "NC_DOUBLE", "_dis?")
@@ -200,7 +212,7 @@ print(data$invalid_times)
 
   # Discharge
   # lapply(list(1,2,3), write_discharge, nc_out=nc_out, discharge=discharge)
-  write_discharge(nc_out = nc_out, discharge=discharge, is_valid=is_valid)
+  write_discharge(nc_out = nc_out, discharge=discharge,discharge_sd=discharge_sd, is_valid=is_valid)
 
   # Close file
   close.nc(nc_out)
