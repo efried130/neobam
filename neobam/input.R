@@ -197,21 +197,21 @@ check_observations = function(swot_data, sos_data) {
   qmin = sos_data$Q_priors$lowerbound_logQ
   qsd = sos_data$Q_priors$logQ_sd
   qhat[qhat < 0] = NA
-  print(qhat)
-  print(qmax)
-  print(qmin)
-  print(qsd)
+  # print(qhat)
+  # print(qmax)
+  # print(qmin)
+  # print(qsd)
   if (is.na(qhat[[1]]) || is.na(qmax[[1]]) || is.na(qmin[[1]]) || is.na(qsd[[1]])) { return(vector(mode = "list")) }
 
   # SWOT data
   swot_data$width[swot_data$width < 0] = NA
   swot_data$slope2[swot_data$slope2 < 0] = NA
-  print(swot_data$width)
-  print(swot_data$slope2)
-  print(swot_data$time)
+  # print(swot_data$width)
+  # print(swot_data$slope2)
+  # print(swot_data$time)
   invalid = get_invalid_nodes_times(swot_data$width, swot_data$slope2, swot_data$time)
-  print('invalid')
-  print(invalid)
+  # print('invalid')
+  # print(invalid)
 
   # Return valid data (or empty list if invalid)
   return(remove_invalid(swot_data, sos_data, invalid$invalid_nodes, invalid$invalid_times))
@@ -227,7 +227,7 @@ check_observations = function(swot_data, sos_data) {
 get_invalid_nodes_times = function(width, slope2, time) {
 
   invalid_width = get_invalid(width)
-  print(invalid_width)
+  # print(invalid_width)
   invalid_slope2 = get_invalid(slope2)
   invalid_time = get_invalid(time)
   invalid_nodes = unique(c(which(invalid_width$invalid_nodes == TRUE),
@@ -295,9 +295,9 @@ remove_invalid = function(swot_data, sos_data, invalid_nodes, invalid_times){
   }
 
   # Return list to indicate invalid data
-  if (is.null(dim(swot_data$width)) || nrow(swot_data$width) < 5 || ncol(swot_data$width) < 5 ) { return(vector(mode = "list")) }
-  if (is.null(dim(swot_data$slope2)) || nrow(swot_data$slope2) < 5 || ncol(swot_data$slope2) < 5 ) { return(vector(mode = "list")) }
-  if (is.null(dim(swot_data$time)) || nrow(swot_data$time) < 5 || ncol(swot_data$time) < 5 ) { return(vector(mode = "list")) }
+  if (is.null(dim(swot_data$width)) || nrow(swot_data$width) < 3 || ncol(swot_data$width) < 3 ) { return(vector(mode = "list")) }
+  if (is.null(dim(swot_data$slope2)) || nrow(swot_data$slope2) < 3 || ncol(swot_data$slope2) < 3 ) { return(vector(mode = "list")) }
+  if (is.null(dim(swot_data$time)) || nrow(swot_data$time) < 3 || ncol(swot_data$time) < 3 ) { return(vector(mode = "list")) }
 
   # Return list of remaining valid observation data
   return(list(swot_data=swot_data, sos_data=sos_data,
@@ -313,14 +313,18 @@ remove_invalid = function(swot_data, sos_data, invalid_nodes, invalid_times){
 get_invalid = function(obs) {
 
   # Determine invalid nx and nt for obs
-  print('')
-  print('hello')
-  print(obs)
-  invalid_nodes = rowSums(is.na(obs)) >= (ncol(obs) - 5)
-  print(invalid_nodes)
-  invalid_times = colSums(is.na(obs)) >= (nrow(obs) - 5)
-  print(invalid_times)
-  print('')
+
+  invalid_nodes = rowSums(is.na(obs)) >= (ncol(obs) - 3)
+  print('rowsums')
+  print(rowSums(is.na(obs)))
+  print('colsums')
+  print(colSums(is.na(obs)))
+
+  invalid_times = colSums(is.na(obs)) >= (nrow(obs) - 3)
+  # invalid_nodes = 0
+  # invalid_times = 0
+
+
   return(list(invalid_nodes=invalid_nodes, invalid_times=invalid_times))
 
 }

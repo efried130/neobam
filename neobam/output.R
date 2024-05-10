@@ -35,8 +35,6 @@ write_posteriors = function(nc_out, posteriors, is_valid, out_data) {
 
   # Chain
   # Posteriors
-  print('nt')
-  print(out_data$nt)
   r = tryCatch(
     error = function(cond) grp.def.nc(nc_out, "r"),
     grp.inq.nc(nc_out, "r")$self
@@ -174,8 +172,6 @@ write_output = function(data, posteriors, discharge,discharge_sd, out_dir, is_va
 print('here are invalid')
 # print(data$invalid_times)
   # Concatenate invalid times back into discharge
-  print('discharge...')
-  print(posteriors)
   # discharge = lapply(discharge, concatenate_invalid, invalid_times=data$invalid_times)
   discharge = concatenate_invalid(discharge, invalid_times = data$invalid_times)
 

@@ -93,7 +93,7 @@ main = function() {
    
 
   # Write output
-  print(neobam_output)
+  # print(neobam_output)
   write_output(out_data, neobam_output$posteriors, neobam_output$posterior_Q, neobam_output$posterior_Q_sd, OUT_DIR, in_data$valid)
   end = Sys.time()
   print(paste("Total execution time for reach", io_data$reach_id, ":", (end - start), "seconds."))
@@ -102,4 +102,4 @@ main = function() {
 }
 
 neobam_output=main()
-print(neobam_output)
+# print(neobam_output)
