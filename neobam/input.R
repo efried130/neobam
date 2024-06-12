@@ -29,12 +29,12 @@ get_input = function(swot_file, sos_file, reach_id) {
   if (length(data) == 0) {
     print('in get_input(), neobam has decided the data are invalid')
      
-    return(list(valid=FALSE, reach_id=reach_id, nx=swot_data$nx, nt=swot_data$nt, thisisdumb=1))
+    return(list(valid=FALSE, reach_id=reach_id, nx=swot_data$nx, nt=swot_data$nt, thisisdumb=1, node_ids=sos_data$Q_priors$nids))
   } else {
     # Create a list of data with reach identifier
     return(list(valid=TRUE, reach_id = reach_id, swot_data=data$swot_data,
                 sos_data=data$sos_data, invalid_nodes=data$invalid_nodes,
-                invalid_times=data$invalid_times))
+                invalid_times=data$invalid_times, node_ids=sos_data$Q_priors$nids))
   }
 }
 
@@ -118,6 +118,8 @@ get_sos = function(sos_file, reach_id) {
     node_grp = grp.inq.nc(sos, "nodes")$self
     nrids = var.get.nc(node_grp, "reach_id")
     indexes = which(nrids == reach_id, arr.ind=TRUE)
+    nids = var.get.nc(node_grp, "node_id")
+    Q_priors$nids = nids[indexes]
 
     model_grp = grp.inq.nc(sos, "model")$self
     # print("made it to the model group")

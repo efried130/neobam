@@ -81,14 +81,16 @@ main = function() {
     out_data = list(reach_id = io_data$reach_id,
                     nt = in_data$swot_data$nt,
                     invalid_nodes = in_data$invalid_nodes,
-                    invalid_times = in_data$invalid_times)
+                    invalid_times = in_data$invalid_times,
+                    node_ids = in_data$node_ids)
   } else {
    
     neobam_output = create_invalid_out(length(in_data$nt))
     out_data = list(reach_id = io_data$reach_id,
                     nt = in_data$nt,
                     invalid_nodes = vector(mode = "list"),
-                    invalid_times = vector(mode = "list"))
+                    invalid_times = vector(mode = "list"),
+                    node_ids = in_data$node_ids)
   }
     
    

@@ -181,6 +181,7 @@ print('here are invalid')
 
   # Global attributes
   att.put.nc(nc_out, "NC_GLOBAL", "reach_id", "NC_INT64", data$reach_id)
+  att.put.nc(nc_out, "NC_GLOBAL", "node_ids", "NC_DOUBLE", unlist(data$node_ids))
 
   # Dimensions
   dim.def.nc(nc_out, "nt", length(data$nt))
