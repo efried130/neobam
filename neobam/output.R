@@ -48,7 +48,7 @@ write_posteriors = function(nc_out, posteriors, is_valid, out_data) {
     var.put.nc(r, "mean", posteriors$r$mean)
     var.put.nc(r, "sd", posteriors$r$sd)
   }else{
-    var.put.nc(r, "mean", rep(FILL, length(out_data$nt)))
+    var.put.nc(r, "mean", rep(FILL, length(posteriors$r$mean)))
     var.put.nc(r, "sd", FILL)
 
   }
@@ -66,7 +66,7 @@ write_posteriors = function(nc_out, posteriors, is_valid, out_data) {
     var.put.nc(logn, "mean", posteriors$logn$mean)
     var.put.nc(logn, "sd", posteriors$logn$sd)
   }else{
-    var.put.nc(logn, "mean", rep(FILL, length(out_data$nt)))
+    var.put.nc(logn, "mean", rep(FILL, length(posteriors$r$mean)))
     var.put.nc(logn, "sd", FILL)
 
   }
@@ -85,7 +85,7 @@ write_posteriors = function(nc_out, posteriors, is_valid, out_data) {
     var.put.nc(logWb, "mean", posteriors$logn$mean)
     var.put.nc(logWb, "sd", posteriors$logn$sd)
   }else{
-    var.put.nc(logWb, "mean", rep(FILL, length(out_data$nt)))
+    var.put.nc(logWb, "mean", rep(FILL, length(posteriors$r$mean)))
     var.put.nc(logWb, "sd", FILL)
 
   }
@@ -105,7 +105,7 @@ write_posteriors = function(nc_out, posteriors, is_valid, out_data) {
     var.put.nc(logDb, "mean", posteriors$logDb$mean)
     var.put.nc(logDb, "sd", posteriors$logDb$sd)
   }else{
-    var.put.nc(logDb, "mean", rep(FILL, length(out_data$nt)))
+    var.put.nc(logDb, "mean", rep(FILL, length(posteriors$r$mean)))
     var.put.nc(logDb, "sd", FILL)
 
   }
@@ -181,7 +181,7 @@ print('here are invalid')
 
   # Global attributes
   att.put.nc(nc_out, "NC_GLOBAL", "reach_id", "NC_INT64", data$reach_id)
-  att.put.nc(nc_out, "NC_GLOBAL", "node_ids", "NC_DOUBLE", unlist(data$node_ids))
+  att.put.nc(nc_out, "NC_GLOBAL", "node_ids", "NC_INT64", unlist(data$node_ids))
 
   # Dimensions
   dim.def.nc(nc_out, "nt", length(data$nt))
@@ -189,10 +189,10 @@ print('here are invalid')
   att.put.nc(nc_out, "nt", "units", "NC_STRING", "time")
   var.put.nc(nc_out, "nt", data$nt)
 
-  dim.def.nc(nc_out, "nx", length(posteriors$r$mean))
+  dim.def.nc(nc_out, "nx", length(data$node_ids))
   var.def.nc(nc_out, "nx", "NC_INT", "nx")
   att.put.nc(nc_out, "nx", "units", "NC_STRING", "num_nodes")
-  var.put.nc(nc_out, "nx", seq(from = 0, by = 1, length.out = length(posteriors$r$mean))
+  var.put.nc(nc_out, "nx", seq(from = 0, by = 1, length.out = length(unlist(data$node_ids)))
 )
 
   # dim.def.nc(nc_out, "_dis?", length(discharge))
