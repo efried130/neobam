@@ -4,7 +4,7 @@
 #library(parallel)
 #library(doParallel)
 
-#' Execute neoBAMd
+#' Execute neoBAM
 #'
 #' @param neobam_data_and_priors named list of SWOT data, priors, and parameters
 #' @param sourcefile string path to .stan file
@@ -40,12 +40,12 @@ process_data = function(data, stan_file) {
  
 
 
-# library(ncdf4,lib.loc = "/nas/cee-water/cjgleason/r-lib/",quietly=TRUE,warn.conflicts=FALSE)
-# library(dplyr,warn.conflicts=FALSE,quietly=TRUE)
-# library(tidyr, lib.loc = "/nas/cee-water/cjgleason/r-lib/",warn.conflicts=FALSE,quietly=TRUE)
-# library(hydroGOF, lib.loc = "/nas/cee-water/cjgleason/r-lib/",warn.conflicts=FALSE,quietly=TRUE)
-# library(ggplot2, lib.loc = "/nas/cee-water/cjgleason/r-lib/",warn.conflicts=FALSE,quietly=TRUE)
-# library(stringr)
+library(ncdf4,lib.loc = "/nas/cee-water/cjgleason/r-lib/",quietly=TRUE,warn.conflicts=FALSE)
+library(dplyr,warn.conflicts=FALSE,quietly=TRUE)
+library(tidyr, lib.loc = "/nas/cee-water/cjgleason/r-lib/",warn.conflicts=FALSE,quietly=TRUE)
+library(hydroGOF, lib.loc = "/nas/cee-water/cjgleason/r-lib/",warn.conflicts=FALSE,quietly=TRUE)
+library(ggplot2, lib.loc = "/nas/cee-water/cjgleason/r-lib/",warn.conflicts=FALSE,quietly=TRUE)
+library(stringr)
 
 #this function does data prep and generate priors
 

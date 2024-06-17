@@ -4,7 +4,7 @@
 #' SWOT: node/time, node/width, node/slope2
 
 # Libraries
-library(RNetCDF,quietly=TRUE,warn.conflicts = FALSE)
+library(RNetCDF,lib.loc='/home/cjgleason_umass_edu/.conda/pkgs/r-rnetcdf-2.6_2-r42h498a2f1_0/lib/R/library/',quietly=TRUE,warn.conflicts = FALSE)
 #' Title
 #'
 #' @param swot_file string path to SWOT NetCDF file
@@ -14,7 +14,6 @@ library(RNetCDF,quietly=TRUE,warn.conflicts = FALSE)
 #' @return named list of data needed to run neoBAM
 #' @export
 get_input = function(swot_file, sos_file, reach_id) {
-
 
   # Get SWOT
   swot_data = get_swot(swot_file)
@@ -29,12 +28,12 @@ get_input = function(swot_file, sos_file, reach_id) {
   if (length(data) == 0) {
     print('in get_input(), neobam has decided the data are invalid')
      
-    return(list(valid=FALSE, reach_id=reach_id, nx=swot_data$nx, nt=swot_data$nt, thisisdumb=1, node_ids=sos_data$Q_priors$nids))
+    return(list(valid=FALSE, reach_id=reach_id, nx=swot_data$nx, nt=swot_data$nt, thisisdumb=1))
   } else {
     # Create a list of data with reach identifier
     return(list(valid=TRUE, reach_id = reach_id, swot_data=data$swot_data,
                 sos_data=data$sos_data, invalid_nodes=data$invalid_nodes,
-                invalid_times=data$invalid_times, node_ids=sos_data$Q_priors$nids))
+                invalid_times=data$invalid_times))
   }
 }
 
@@ -48,7 +47,7 @@ get_swot = function(swot_file) {
   nx = var.get.nc(swot, "nx")
   nt = var.get.nc(swot, "nt")
 
-  node_grp = grp.inq.nc(swot, "node")$self
+  node_grp = grp.inq.nc(swot, "reach")$self
   width = t(var.get.nc(node_grp, "width"))
   slope2 = t(var.get.nc(node_grp, "slope2"))
   time = t(var.get.nc(node_grp, "time"))
@@ -118,8 +117,6 @@ get_sos = function(sos_file, reach_id) {
     node_grp = grp.inq.nc(sos, "nodes")$self
     nrids = var.get.nc(node_grp, "reach_id")
     indexes = which(nrids == reach_id, arr.ind=TRUE)
-    nids = var.get.nc(node_grp, "node_id")
-    Q_priors$nids = nids[indexes]
 
     model_grp = grp.inq.nc(sos, "model")$self
     # print("made it to the model group")
@@ -199,21 +196,12 @@ check_observations = function(swot_data, sos_data) {
   qmin = sos_data$Q_priors$lowerbound_logQ
   qsd = sos_data$Q_priors$logQ_sd
   qhat[qhat < 0] = NA
-  # print(qhat)
-  # print(qmax)
-  # print(qmin)
-  # print(qsd)
   if (is.na(qhat[[1]]) || is.na(qmax[[1]]) || is.na(qmin[[1]]) || is.na(qsd[[1]])) { return(vector(mode = "list")) }
 
   # SWOT data
   swot_data$width[swot_data$width < 0] = NA
   swot_data$slope2[swot_data$slope2 < 0] = NA
-  # print(swot_data$width)
-  # print(swot_data$slope2)
-  # print(swot_data$time)
   invalid = get_invalid_nodes_times(swot_data$width, swot_data$slope2, swot_data$time)
-  # print('invalid')
-  # print(invalid)
 
   # Return valid data (or empty list if invalid)
   return(remove_invalid(swot_data, sos_data, invalid$invalid_nodes, invalid$invalid_times))
@@ -229,7 +217,6 @@ check_observations = function(swot_data, sos_data) {
 get_invalid_nodes_times = function(width, slope2, time) {
 
   invalid_width = get_invalid(width)
-  # print(invalid_width)
   invalid_slope2 = get_invalid(slope2)
   invalid_time = get_invalid(time)
   invalid_nodes = unique(c(which(invalid_width$invalid_nodes == TRUE),
@@ -250,23 +237,19 @@ get_invalid_nodes_times = function(width, slope2, time) {
 #'
 #' @return named list of SWOT observations, Q priors, and other priors
 remove_invalid = function(swot_data, sos_data, invalid_nodes, invalid_times){
-  print(invalid_nodes)
 
   # All valid
   if (identical(invalid_nodes, integer(0)) && identical(invalid_times, integer(0))) {
-    print('all valid')
     return(list(swot_data=swot_data, sos_data=sos_data,
                 invalid_nodes=invalid_nodes, invalid_times=invalid_times))
     # Valid nodes
   } else if (identical(invalid_nodes, integer(0))) {
-    print('valid nodes')
     swot_data$width = swot_data$width[, -invalid_times]
     swot_data$slope2 = swot_data$slope2[, -invalid_times]
     swot_data$time = swot_data$time[, -invalid_times]
 
     # Valid time steps
   } else if (identical(invalid_times, integer(0))) {
-    print('valid time')
     swot_data$width = swot_data$width[-invalid_nodes,]
     swot_data$slope2 = swot_data$slope2[-invalid_nodes,]
     swot_data$time = swot_data$time[-invalid_nodes,]
@@ -281,7 +264,6 @@ remove_invalid = function(swot_data, sos_data, invalid_nodes, invalid_times){
 
     # Both invalid
   } else {
-    print('both invalid')
     swot_data$width = swot_data$width[-invalid_nodes, -invalid_times]
     swot_data$slope2 = swot_data$slope2[-invalid_nodes, -invalid_times]
     swot_data$time = swot_data$time[-invalid_nodes, -invalid_times]
@@ -297,9 +279,9 @@ remove_invalid = function(swot_data, sos_data, invalid_nodes, invalid_times){
   }
 
   # Return list to indicate invalid data
-  if (is.null(dim(swot_data$width)) || nrow(swot_data$width) < 3 || ncol(swot_data$width) < 3 ) { return(vector(mode = "list")) }
-  if (is.null(dim(swot_data$slope2)) || nrow(swot_data$slope2) < 3 || ncol(swot_data$slope2) < 3 ) { return(vector(mode = "list")) }
-  if (is.null(dim(swot_data$time)) || nrow(swot_data$time) < 3 || ncol(swot_data$time) < 3 ) { return(vector(mode = "list")) }
+  if (is.null(dim(swot_data$width)) || nrow(swot_data$width) < 5 || ncol(swot_data$width) < 5 ) { return(vector(mode = "list")) }
+  if (is.null(dim(swot_data$slope2)) || nrow(swot_data$slope2) < 5 || ncol(swot_data$slope2) < 5 ) { return(vector(mode = "list")) }
+  if (is.null(dim(swot_data$time)) || nrow(swot_data$time) < 5 || ncol(swot_data$time) < 5 ) { return(vector(mode = "list")) }
 
   # Return list of remaining valid observation data
   return(list(swot_data=swot_data, sos_data=sos_data,
@@ -315,18 +297,8 @@ remove_invalid = function(swot_data, sos_data, invalid_nodes, invalid_times){
 get_invalid = function(obs) {
 
   # Determine invalid nx and nt for obs
-
-  invalid_nodes = rowSums(is.na(obs)) >= (ncol(obs) - 3)
-  print('rowsums')
-  print(rowSums(is.na(obs)))
-  print('colsums')
-  print(colSums(is.na(obs)))
-
-  invalid_times = colSums(is.na(obs)) >= (nrow(obs) - 3)
-  # invalid_nodes = 0
-  # invalid_times = 0
-
-
+  invalid_nodes = rowSums(is.na(obs)) >= (ncol(obs) - 5)
+  invalid_times = colSums(is.na(obs)) >= (nrow(obs) - 5)
   return(list(invalid_nodes=invalid_nodes, invalid_times=invalid_times))
 
 }
