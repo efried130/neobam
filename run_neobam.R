@@ -6,35 +6,34 @@
 #' reach_files
 #'    - name of JSON file that contains associated reach file data
 
+
 # Functions
-source("/app/neobam/config.R")
 source("/app/neobam/input.R")
 source("/app/neobam/neobam_functions.R")
 source("/app/neobam/output.R")
 source("/app/neobam/process.R")
 
+# source("neobam/input.R")
+# source("neobam/neobam_functions.R")
+# source("neobam/output.R")
+# source("neobam/process.R")
+
 # Constants
-IN_DIR = file.path("/mnt", "data", "input")
-OUT_DIR = file.path("/mnt", "data", "output")
+# IN_DIR = file.path("/nas/cee-water/cjgleason/SWOT_Q_UMASS/mnt",  "input")
+# OUT_DIR = file.path("/nas/cee-water/cjgleason/SWOT_Q_UMASS/mnt", "output")
+IN_DIR = file.path("/mnt/data/input")
+OUT_DIR = file.path("/mnt/data/output")
 STAN_FILE = file.path("/app", "neobam", "neobam_stan_engine.stan")
+# STAN_FILE = file.path( "neobam", "neobam_stan_engine.stan")
+
 
 #' Identify reach and locate SWOT and SoS files.
 #'
 #' @param reaches_json name of json reach file
 #'
 #' @return list of swot file and sos file
-get_reach_files = function(reaches_json){
-  # Get reach identifier from array environment variable
-  index = strtoi(Sys.getenv("AWS_BATCH_JOB_ARRAY_INDEX")) + 1
-  args = commandArgs(trailingOnly=TRUE)
-
-
-  if (length(args)>=1){
-      reaches_json = file.path(IN_DIR, paste('reaches_',strtoi(args[1]),'.json', sep = ""))
-  } else{
-      reaches_json = file.path(IN_DIR, 'reaches.json')
-  }
-
+get_reach_files = function(reaches_json, index){
+  # Get reach data from index
   json_data = rjson::fromJSON(file=file.path(reaches_json))[[index]]
   return(list(reach_id = json_data$reach_id,
               swot_file = file.path(IN_DIR, "swot", json_data$swot),
@@ -48,7 +47,8 @@ get_reach_files = function(reaches_json){
 #' @return named list of discharge and posteriors
 create_invalid_out = function(nt) {
   nt_vector = rep(NA_real_, nt)
-  base_discharge = list(nt_vector, nt_vector, nt_vector)
+  # base_discharge = list(nt_vector, nt_vector, nt_vector)
+  base_discharge = list(nt_vector)
   base_posteriors = list(
     r = list(mean=NA_real_, sd=NA_real_),
     logn = list(mean=NA_real_, sd=NA_real_),
@@ -64,31 +64,51 @@ main = function() {
   # Identify reach files to process
   start = Sys.time()
   args = commandArgs(trailingOnly=TRUE)
-  reaches_json = ifelse(identical(args, character(0)), "reaches.json", args[1])
-  io_data = get_reach_files(reaches_json)
+  if (length(args)>=2){
+      index = strtoi(args[1]) + 1
+      reaches_json = file.path(IN_DIR, paste(args[2]))
+  } else if (length(args)>=1) {
+      index = strtoi(args[1]) + 1
+      reaches_json = file.path(IN_DIR, 'reaches.json')
+  } else{
+      index = strtoi(Sys.getenv("AWS_BATCH_JOB_ARRAY_INDEX")) + 1
+      reaches_json = file.path(IN_DIR, 'reaches.json')
+  }
+  io_data = get_reach_files(reaches_json, index)
 
   # Get Input
   in_data = get_input(io_data$swot_file, io_data$sos_file, io_data$reach_id)
 
+  print('processing data...')
   # Process
   if (in_data$valid != FALSE) {
-    process_data = process_data(in_data, STAN_FILE)
+    print('data was valid...')
+    neobam_output = process_data(in_data, STAN_FILE)
     out_data = list(reach_id = io_data$reach_id,
                     nt = in_data$swot_data$nt,
                     invalid_nodes = in_data$invalid_nodes,
-                    invalid_times = in_data$invalid_times)
+                    invalid_times = in_data$invalid_times,
+                    node_ids = in_data$node_ids)
   } else {
-    process_data = create_invalid_out(length(in_data$nt))
+   
+    neobam_output = create_invalid_out(length(in_data$nt))
     out_data = list(reach_id = io_data$reach_id,
                     nt = in_data$nt,
                     invalid_nodes = vector(mode = "list"),
-                    invalid_times = vector(mode = "list"))
+                    invalid_times = vector(mode = "list"),
+                    node_ids = in_data$node_ids)
   }
+    
+   
 
   # Write output
-  write_output(out_data, process_data$posteriors, process_data$discharge, OUT_DIR)
+  # print(neobam_output)
+  write_output(out_data, neobam_output$posteriors, neobam_output$posterior_Q, neobam_output$posterior_Q_sd, OUT_DIR, in_data$valid)
   end = Sys.time()
   print(paste("Total execution time for reach", io_data$reach_id, ":", (end - start), "seconds."))
+    
+    return(list(c(neobam_output,out_data)))
 }
 
-main()
+neobam_output=main()
+# print(neobam_output)
