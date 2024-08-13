@@ -24,15 +24,17 @@ get_input = function(swot_file, sos_file, reach_id) {
 
   # Check for valid number of observations
   data = check_observations(swot_data, sos_data)
+  print("here first bs")
+  print(swot_data$obs_times)
 
   # Return list of valid observations
   if (length(data) == 0) {
     print('in get_input(), neobam has decided the data are invalid')
      
-    return(list(valid=FALSE, reach_id=reach_id, nx=swot_data$nx, nt=swot_data$nt, thisisdumb=1, node_ids=sos_data$Q_priors$nids))
+    return(list(valid=FALSE, obs_times=swot_data$obs_times,reach_id=reach_id, nx=swot_data$nx, nt=swot_data$nt, thisisdumb=1, node_ids=sos_data$Q_priors$nids))
   } else {
     # Create a list of data with reach identifier
-    return(list(valid=TRUE, reach_id = reach_id, swot_data=data$swot_data,
+    return(list(valid=TRUE, reach_id = reach_id,obs_times=swot_data$obs_times ,swot_data=data$swot_data,
                 sos_data=data$sos_data, invalid_nodes=data$invalid_nodes,
                 invalid_times=data$invalid_times, node_ids=sos_data$Q_priors$nids))
   }
@@ -52,12 +54,14 @@ get_swot = function(swot_file) {
   width = t(var.get.nc(node_grp, "width"))
   slope2 = t(var.get.nc(node_grp, "slope2"))
   time = t(var.get.nc(node_grp, "time"))
-    
+
+  reach_grp = grp.inq.nc(swot, "reach")$self
+  obs_times = t(var.get.nc(reach_grp, "time_str"))   
 
 
   close.nc(swot)
 
-  return(list(nx=nx, nt=nt, width=width, slope2=slope2, time=time))
+  return(list(nx=nx, nt=nt, width=width, slope2=slope2, time=time, obs_times=obs_times))
 
 }
 

@@ -165,7 +165,7 @@ write_discharge = function(nc_out, discharge,discharge_sd,is_valid) {
 #' @param out_dir string to output directory
 #'
 #' @export
-write_output = function(data, posteriors, discharge,discharge_sd, out_dir, is_valid) {
+write_output = function(data, posteriors, discharge,discharge_sd, out_dir, is_valid,obs_times) {
 
   print('writing output...')
 
@@ -188,6 +188,11 @@ print('here are invalid')
   var.def.nc(nc_out, "nt", "NC_INT", "nt")
   att.put.nc(nc_out, "nt", "units", "NC_STRING", "time")
   var.put.nc(nc_out, "nt", data$nt)
+
+
+  var.def.nc(nc_out, "time_str", "NC_STRING", "nt")
+  att.put.nc(nc_out, "time_str", "units", "NC_STRING", "time")
+  var.put.nc(nc_out, "time_str", c(obs_times))
 
   dim.def.nc(nc_out, "nx", length(data$node_ids))
   var.def.nc(nc_out, "nx", "NC_INT", "nx")
