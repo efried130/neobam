@@ -11,26 +11,38 @@ library(reticulate)
 library(optparse)
 
 # Functions
-source("/app/neobam/input.R")
-source("/app/neobam/neobam_functions.R")
-source("/app/neobam/output.R")
-source("/app/neobam/process.R")
+# source("/app/neobam/input.R")
+# source("/app/neobam/neobam_functions.R")
+# source("/app/neobam/output.R")
+# source("/app/neobam/process.R")
 
 # source("neobam/input.R")
 # source("neobam/neobam_functions.R")
 # source("neobam/output.R")
 # source("neobam/process.R")
 
+source("/Users/tebaldi/Documents/workspace/confluence/workspace/neobam/neobam/input.R")
+source("/Users/tebaldi/Documents/workspace/confluence/workspace/neobam/neobam/neobam_functions.R")
+source("/Users/tebaldi/Documents/workspace/confluence/workspace/neobam/neobam/output.R")
+source("/Users/tebaldi/Documents/workspace/confluence/workspace/neobam/neobam/process.R")
+
 # Constants
-# IN_DIR = file.path("/nas/cee-water/cjgleason/SWOT_Q_UMASS/mnt",  "input")
-# OUT_DIR = file.path("/nas/cee-water/cjgleason/SWOT_Q_UMASS/mnt", "output")
-IN_DIR = file.path("/mnt/data/input")
-OUT_DIR = file.path("/mnt/data/output")
-STAN_FILE = file.path("/app", "neobam", "neobam_stan_engine.stan")
-# STAN_FILE = file.path( "neobam", "neobam_stan_engine.stan")
-PYTHON_EXE = "/usr/bin/python3"
-PYTHON_FILE = "/app/sos_read/sos_read.py"
-TMP_PATH = "/tmp"
+# # IN_DIR = file.path("/nas/cee-water/cjgleason/SWOT_Q_UMASS/mnt",  "input")
+# # OUT_DIR = file.path("/nas/cee-water/cjgleason/SWOT_Q_UMASS/mnt", "output")
+# IN_DIR = file.path("/mnt/data/input")
+# OUT_DIR = file.path("/mnt/data/output")
+# STAN_FILE = file.path("/app", "neobam", "neobam_stan_engine.stan")
+# # STAN_FILE = file.path( "neobam", "neobam_stan_engine.stan")
+# PYTHON_EXE = "/usr/bin/python3"
+# PYTHON_FILE = "/app/sos_read/sos_read.py"
+# TMP_PATH = "/tmp"
+IN_DIR = file.path("/Users/tebaldi/Documents/workspace/confluence/data/modules/neobam/input")
+OUT_DIR = file.path("/Users/tebaldi/Documents/workspace/confluence/data/modules/neobam/output")
+STAN_FILE = file.path("/Users/tebaldi/Documents/workspace/confluence/workspace/neobam", "neobam", "neobam_stan_engine.stan")
+PYTHON_EXE = "/Users/tebaldi/Documents/workspace/environments/sos_read/bin/python3"
+PYTHON_FILE = "/Users/tebaldi/Documents/workspace/confluence/workspace/neobam/sos_read/sos_read.py"
+TMP_PATH = "/Users/tebaldi/Documents/workspace/confluence/data/modules/neobam/tmp"
+
 
 #' Identify reach and locate SWOT and SoS files.
 #'
@@ -41,16 +53,23 @@ get_reach_files = function(reaches_json, index, bucket_key){
   # Get reach data from index
   json_data = rjson::fromJSON(file=file.path(IN_DIR, reaches_json))[[index]]
 
-  # Download the SoS file and reference the file path
-  use_python(PYTHON_EXE)
-  source_python(PYTHON_FILE)
+  if (bucket_key != "") {
+    # Download the SoS file and reference the file path
+    use_python(PYTHON_EXE)
+    source_python(PYTHON_FILE)
 
-  sos_filepath = file.path(TMP_PATH, json_data$sos)
-  download_sos(bucket_key, sos_filepath)
+    sos_filepath = file.path(TMP_PATH, json_data$sos)
+    download_sos(bucket_key, sos_filepath)
+    reach_list = list(reach_id = json_data$reach_id,
+                      swot_file = file.path(IN_DIR, "swot", json_data$swot),
+                      sos_file = sos_filepath)
+  } else {
+    reach_list = list(reach_id = json_data$reach_id,
+                      swot_file = file.path(IN_DIR, "swot", json_data$swot),
+                      sos_file = file.path(IN_DIR, "sos", json_data$sos))
+  }
 
-  return(list(reach_id = json_data$reach_id,
-              swot_file = file.path(IN_DIR, "swot", json_data$swot),
-              sos_file = sos_filepath))
+  return(reach_list)
 }
 
 #' Create output data structure for invalid observations
@@ -79,7 +98,7 @@ main = function() {
 
   option_list <- list(
     make_option(c("-i", "--index"), type = "integer", default = NULL, help = "Index to run on"),
-    make_option(c("-b", "--bucket_key"), type = "character", default = NULL, help = "Bucket key to find the sos"),
+    make_option(c("-b", "--bucket_key"), type = "character", default = "", help = "Bucket key to find the sos"),
     make_option(c("-r", "--reaches_json"), type = "character", default = "reaches.json", help = "Name of reaches.json")
   )
 
@@ -93,6 +112,9 @@ main = function() {
   print(paste("reaches_json: ", reaches_json))
 
   io_data = get_reach_files(reaches_json, index, bucket_key)
+  print(paste("reach_id: ", io_data$reach_id))
+  print(paste("swot_file: ", io_data$swot_file))
+  print(paste("sos_file: ", io_data$sos_file))
 
   # Get Input
   in_data = get_input(io_data$swot_file, io_data$sos_file, io_data$reach_id)
