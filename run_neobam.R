@@ -11,37 +11,26 @@ library(reticulate)
 library(optparse)
 
 # Functions
-# source("/app/neobam/input.R")
-# source("/app/neobam/neobam_functions.R")
-# source("/app/neobam/output.R")
-# source("/app/neobam/process.R")
+source("/app/neobam/input.R")
+source("/app/neobam/neobam_functions.R")
+source("/app/neobam/output.R")
+source("/app/neobam/process.R")
 
 # source("neobam/input.R")
 # source("neobam/neobam_functions.R")
 # source("neobam/output.R")
 # source("neobam/process.R")
 
-source("/Users/tebaldi/Documents/workspace/confluence/workspace/neobam/neobam/input.R")
-source("/Users/tebaldi/Documents/workspace/confluence/workspace/neobam/neobam/neobam_functions.R")
-source("/Users/tebaldi/Documents/workspace/confluence/workspace/neobam/neobam/output.R")
-source("/Users/tebaldi/Documents/workspace/confluence/workspace/neobam/neobam/process.R")
-
 # Constants
-# # IN_DIR = file.path("/nas/cee-water/cjgleason/SWOT_Q_UMASS/mnt",  "input")
-# # OUT_DIR = file.path("/nas/cee-water/cjgleason/SWOT_Q_UMASS/mnt", "output")
-# IN_DIR = file.path("/mnt/data/input")
-# OUT_DIR = file.path("/mnt/data/output")
-# STAN_FILE = file.path("/app", "neobam", "neobam_stan_engine.stan")
-# # STAN_FILE = file.path( "neobam", "neobam_stan_engine.stan")
-# PYTHON_EXE = "/usr/bin/python3"
-# PYTHON_FILE = "/app/sos_read/sos_read.py"
-# TMP_PATH = "/tmp"
-IN_DIR = file.path("/Users/tebaldi/Documents/workspace/confluence/data/modules/neobam/input")
-OUT_DIR = file.path("/Users/tebaldi/Documents/workspace/confluence/data/modules/neobam/output")
-STAN_FILE = file.path("/Users/tebaldi/Documents/workspace/confluence/workspace/neobam", "neobam", "neobam_stan_engine.stan")
-PYTHON_EXE = "/Users/tebaldi/Documents/workspace/environments/sos_read/bin/python3"
-PYTHON_FILE = "/Users/tebaldi/Documents/workspace/confluence/workspace/neobam/sos_read/sos_read.py"
-TMP_PATH = "/Users/tebaldi/Documents/workspace/confluence/data/modules/neobam/tmp"
+# IN_DIR = file.path("/nas/cee-water/cjgleason/SWOT_Q_UMASS/mnt",  "input")
+# OUT_DIR = file.path("/nas/cee-water/cjgleason/SWOT_Q_UMASS/mnt", "output")
+IN_DIR = file.path("/mnt/data/input")
+OUT_DIR = file.path("/mnt/data/output")
+STAN_FILE = file.path("/app", "neobam", "neobam_stan_engine.stan")
+# STAN_FILE = file.path( "neobam", "neobam_stan_engine.stan")
+PYTHON_EXE = "/usr/bin/python3"
+PYTHON_FILE = "/app/sos_read/sos_read.py"
+TMP_PATH = "/tmp"
 
 
 #' Identify reach and locate SWOT and SoS files.
