@@ -103,7 +103,13 @@ main = function() {
 
   # Write output
   # print(neobam_output)
-  write_output(out_data, neobam_output$posteriors, neobam_output$posterior_Q, neobam_output$posterior_Q_sd, OUT_DIR, in_data$valid, in_data$obs_times)
+  write_output(data=out_data, 
+               posteriors=neobam_output$posteriors, 
+               discharge=neobam_output$posterior_Q, 
+               discharge_sd=neobam_output$posterior_Q_sd, 
+               out_dir=OUT_DIR, 
+               is_valid= in_data$valid, 
+               obs_times=in_data$obs_times)
   end = Sys.time()
   print(paste("Total execution time for reach", io_data$reach_id, ":", (end - start), "seconds."))
     
