@@ -82,8 +82,8 @@ write_posteriors = function(nc_out, posteriors, is_valid, out_data) {
   att.put.nc(logWb, "sd", "_FillValue", "NC_DOUBLE", FILL)
 
   if(is_valid){
-    var.put.nc(logWb, "mean", posteriors$logn$mean)
-    var.put.nc(logWb, "sd", posteriors$logn$sd)
+    var.put.nc(logWb, "mean", posteriors$logWb$mean)
+    var.put.nc(logWb, "sd", posteriors$logWb$sd)
   }else{
     var.put.nc(logWb, "mean", rep(FILL, length(posteriors$r$mean)))
     var.put.nc(logWb, "sd", FILL)
