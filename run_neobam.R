@@ -94,7 +94,17 @@ main = function() {
   opt_parser <- OptionParser(option_list = option_list)
   opts <- parse_args(opt_parser)
   bucket_key <- opts$bucket_key
-  index <- opts$index + 1    # Add 1 to AWS 0-based index
+
+  # Parse index
+  index <- opts$index
+
+  # Check if we are running via env variable...
+  if (index == -256){
+    index <- strtoi(Sys.getenv("AWS_BATCH_JOB_ARRAY_INDEX"))
+  }
+
+  index <- index + 1    # Add 1 to AWS 0-based index
+  
   reaches_json <- opts$reaches_json
   print(paste("bucket_key: ", bucket_key))
   print(paste("index: ", index))
