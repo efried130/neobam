@@ -24,8 +24,8 @@ get_input = function(swot_file, sos_file, reach_id) {
 
   # Check for valid number of observations
   data = check_observations(swot_data, sos_data)
-  print("here first bs")
-  print(swot_data$obs_times)
+  # print("here first bs")
+  # print(swot_data$obs_times)
 
   # Return list of valid observations
   if (length(data) == 0) {
@@ -128,7 +128,10 @@ get_sos = function(sos_file, reach_id) {
     model_grp = grp.inq.nc(sos, "model")$self
     # print("made it to the model group")
     # print(model_grp)
-    Q_priors$logQ_hat = log(var.get.nc(model_grp, "mean_q")[index])
+    Q_priors$logQ_hat = log(var.get.nc(model_grp, "monthly_q")[,index])
+        
+        
+  
     Q_priors$upperbound_logQ = log(var.get.nc(model_grp, "max_q")[index])
     min_q = var.get.nc(model_grp, "min_q")[index]   # Check action taken
     if ((min_q < 0) | (is.na(min_q))) {
@@ -254,11 +257,24 @@ get_invalid_nodes_times = function(width, slope2, time) {
 #'
 #' @return named list of SWOT observations, Q priors, and other priors
 remove_invalid = function(swot_data, sos_data, invalid_nodes, invalid_times){
-  print(invalid_nodes)
+  # print(invalid_nodes)
+    #make a dataframe with a month keyf ield
+    Q_hat_df= data.frame(logQ_hat=sos_data$Q_priors$logQ_hat, month=as.numeric(1:12))
+    #change the date to a datetime object  using the !#$!@#$ origin of the data
+    #time is nx by nt, we want an nt vector only
+    obs_date= as.Date(as.Date(swot_data$time[1,]/86400,origin = '2000-01-01'),format='%Y%m%d')
+    #make it a month
+    obs_month=data.frame(month=as.numeric(format(obs_date,'%m')))
+    
+    #now join the Qhat_df by month
+    Q_hat_month=left_join(obs_month,Q_hat_df,by='month')
 
+   
+    
   # All valid
   if (identical(invalid_nodes, integer(0)) && identical(invalid_times, integer(0))) {
     print('all valid')
+      sos_data$Q_priors$logQ_hat=Q_hat_month$logQ_hat
     return(list(swot_data=swot_data, sos_data=sos_data,
                 invalid_nodes=invalid_nodes, invalid_times=invalid_times))
     # Valid nodes
@@ -267,6 +283,7 @@ remove_invalid = function(swot_data, sos_data, invalid_nodes, invalid_times){
     swot_data$width = swot_data$width[, -invalid_times]
     swot_data$slope2 = swot_data$slope2[, -invalid_times]
     swot_data$time = swot_data$time[, -invalid_times]
+    sos_data$Q_priors$logQ_hat=Q_hat_month$logQ_hat[-invalid_times]
 
     # Valid time steps
   } else if (identical(invalid_times, integer(0))) {
@@ -289,6 +306,9 @@ remove_invalid = function(swot_data, sos_data, invalid_nodes, invalid_times){
     swot_data$width = swot_data$width[-invalid_nodes, -invalid_times]
     swot_data$slope2 = swot_data$slope2[-invalid_nodes, -invalid_times]
     swot_data$time = swot_data$time[-invalid_nodes, -invalid_times]
+    sos_data$Q_priors$logQ_hat=Q_hat_month$logQ_hat[-invalid_times]  
+      
+      
     sos_data$window_params$logWb_hat = sos_data$window_params$logWb_hat[-invalid_nodes]
     sos_data$window_params$logWb_sd = sos_data$window_params$logWb_sd[-invalid_nodes]
     sos_data$window_params$logDb_hat = sos_data$window_params$logDb_hat[-invalid_nodes]
@@ -305,6 +325,10 @@ remove_invalid = function(swot_data, sos_data, invalid_nodes, invalid_times){
   if (is.null(dim(swot_data$slope2)) || nrow(swot_data$slope2) < 3 || ncol(swot_data$slope2) < 3 ) { return(vector(mode = "list")) }
   if (is.null(dim(swot_data$time)) || nrow(swot_data$time) < 3 || ncol(swot_data$time) < 3 ) { return(vector(mode = "list")) }
 
+    
+
+    
+    
   # Return list of remaining valid observation data
   return(list(swot_data=swot_data, sos_data=sos_data,
               invalid_nodes=invalid_nodes, invalid_times=invalid_times))
@@ -321,10 +345,10 @@ get_invalid = function(obs) {
   # Determine invalid nx and nt for obs
 
   invalid_nodes = rowSums(is.na(obs)) >= (ncol(obs) - 3)
-  print('rowsums')
-  print(rowSums(is.na(obs)))
-  print('colsums')
-  print(colSums(is.na(obs)))
+  # print('rowsums')
+  # print(rowSums(is.na(obs)))
+  # print('colsums')
+  # print(colSums(is.na(obs)))
 
   invalid_times = colSums(is.na(obs)) >= (nrow(obs) - 3)
   # invalid_nodes = 0

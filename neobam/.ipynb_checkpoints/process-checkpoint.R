@@ -4,7 +4,7 @@
 #library(parallel)
 #library(doParallel)
 
-#' Execute neoBAM
+#' Execute neoBAMd
 #'
 #' @param neobam_data_and_priors named list of SWOT data, priors, and parameters
 #' @param sourcefile string path to .stan file
@@ -40,12 +40,12 @@ process_data = function(data, stan_file) {
  
 
 
-library(ncdf4,lib.loc = "/nas/cee-water/cjgleason/r-lib/",quietly=TRUE,warn.conflicts=FALSE)
-library(dplyr,warn.conflicts=FALSE,quietly=TRUE)
-library(tidyr, lib.loc = "/nas/cee-water/cjgleason/r-lib/",warn.conflicts=FALSE,quietly=TRUE)
-library(hydroGOF, lib.loc = "/nas/cee-water/cjgleason/r-lib/",warn.conflicts=FALSE,quietly=TRUE)
-library(ggplot2, lib.loc = "/nas/cee-water/cjgleason/r-lib/",warn.conflicts=FALSE,quietly=TRUE)
-library(stringr)
+# library(ncdf4,lib.loc = "/nas/cee-water/cjgleason/r-lib/",quietly=TRUE,warn.conflicts=FALSE)
+# library(dplyr,warn.conflicts=FALSE,quietly=TRUE)
+# library(tidyr, lib.loc = "/nas/cee-water/cjgleason/r-lib/",warn.conflicts=FALSE,quietly=TRUE)
+# library(hydroGOF, lib.loc = "/nas/cee-water/cjgleason/r-lib/",warn.conflicts=FALSE,quietly=TRUE)
+# library(ggplot2, lib.loc = "/nas/cee-water/cjgleason/r-lib/",warn.conflicts=FALSE,quietly=TRUE)
+# library(stringr)
 
 #this function does data prep and generate priors
 
@@ -60,18 +60,23 @@ library(stringr)
 
     #performative variables
     Werr_sd=    20,
-    Serr_sd=    0.00001, 
+    Serr_sd=    0.000018, #changed december 2024 to mathc version D stats
     logWerr_sd=    norm_to_lognorm(mean(data$swot_data$width,na.rm=T),20)$sigma,
-    logSerr_sd=  norm_to_lognorm(mean(data$swot_data$width,na.rm=T),0.00001)$sigma,
+    logSerr_sd=  norm_to_lognorm(mean(data$swot_data$width,na.rm=T),0.000018)$sigma,
     
       iter=     2000
 
 
     
 )
+    
 
-   neobam_parameters$ logQ_hat= rep(data$sos_data$Q_priors$logQ_hat,
-                                    times=ncol(neobam_parameters$Wobs)) 
+
+    neobam_parameters$ logQ_hat=data$sos_data$Q_priors$logQ_hat
+    
+      #deprecated december 2024 in move to monthly priors
+   # neobam_parameters$ logQ_hat= rep(mean(data$sos_data$Q_priors$logQ_hat),
+   #                                  times=ncol(neobam_parameters$Wobs)) 
    neobam_parameters$ lowerbound_logQ= data$sos_data$Q_priors$lowerbound_logQ
    neobam_parameters$ upperbound_logQ=data$sos_data$Q_priors$upperbound_logQ
    neobam_parameters$ logQ_sd= rep(data$sos_data$Q_priors$logQ_sd,
