@@ -210,7 +210,7 @@ check_observations = function(swot_data, sos_data) {
   # print(qmax)
   # print(qmin)
   # print(qsd)
-  if (is.na(qhat[[1]]) || is.na(qmax[[1]]) || is.na(qmin[[1]]) || is.na(qsd[[1]])) { return(vector(mode = "list")) }
+  if (all(is.na(qhat[[1]])) || is.na(qmax[[1]]) || is.na(qmin[[1]]) || is.na(qsd[[1]])) { return(vector(mode = "list")) }
 
   # SWOT data
   swot_data$width[swot_data$width < 0] = NA
