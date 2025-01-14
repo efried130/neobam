@@ -18,6 +18,8 @@ get_input = function(swot_file, sos_file, reach_id) {
 
   # Get SWOT
   swot_data = get_swot(swot_file)
+    
+    # print(swot_data$node$width)
 
   # Get SOS
   sos_data = get_sos(sos_file, reach_id)
@@ -30,9 +32,10 @@ get_input = function(swot_file, sos_file, reach_id) {
   # Return list of valid observations
   if (length(data) == 0) {
     print('in get_input(), neobam has decided the data are invalid')
-     
+         # print(swot_data)
     return(list(valid=FALSE, obs_times=swot_data$obs_times,reach_id=reach_id, nx=swot_data$nx, nt=swot_data$nt, thisisdumb=1, node_ids=sos_data$Q_priors$nids))
   } else {
+          # print(swot_data)
     # Create a list of data with reach identifier
     return(list(valid=TRUE, reach_id = reach_id,obs_times=swot_data$obs_times ,swot_data=data$swot_data,
                 sos_data=data$sos_data, invalid_nodes=data$invalid_nodes,
@@ -134,11 +137,11 @@ get_sos = function(sos_file, reach_id) {
   
     Q_priors$upperbound_logQ = log(var.get.nc(model_grp, "max_q")[index])
     min_q = var.get.nc(model_grp, "min_q")[index]   # Check action taken
-    if ((min_q < 0) | (is.na(min_q))) {
-      Q_priors$lowerbound_logQ = NA
-    } else {
+    if (is.na(min_q)){Q_priors$lowerbound_logQ = NA}
+    if(min_q ==0){min_q=0.01}
+        
       Q_priors$lowerbound_logQ = log(min_q)
-    }
+    
 
     r_grp = grp.inq.nc(sos, "gbpriors/reach")$self
     Q_priors$logQ_sd = var.get.nc(r_grp, "logQ_sd")[index]
@@ -205,12 +208,14 @@ check_observations = function(swot_data, sos_data) {
   qmax = sos_data$Q_priors$upperbound_logQ
   qmin = sos_data$Q_priors$lowerbound_logQ
   qsd = sos_data$Q_priors$logQ_sd
-  qhat[qhat < 0] = NA
-  # print(qhat)
-  # print(qmax)
-  # print(qmin)
-  # print(qsd)
-  if (is.na(qhat[[1]]) || is.na(qmax[[1]]) || is.na(qmin[[1]]) || is.na(qsd[[1]])) { return(vector(mode = "list")) }
+
+
+    
+
+#     print((all(is.na(qhat[[1]])) || is.na(qmax[[1]]) || is.na(qmin[[1]]) || is.na(qsd[[1]])))
+  if (all(is.na(qhat[[1]])) || is.na(qmax[[1]]) || is.na(qmin[[1]]) || is.na(qsd[[1]])) { return(vector(mode = "list")) }
+    
+  
 
   # SWOT data
   swot_data$width[swot_data$width < 0] = NA
@@ -218,11 +223,13 @@ check_observations = function(swot_data, sos_data) {
   # print(swot_data$width)
   # print(swot_data$slope2)
   # print(swot_data$time)
+    
+ 
   invalid = get_invalid_nodes_times(swot_data$width, swot_data$slope2, swot_data$time)
-  # print('invalid')
-  # print(invalid)
+ 
 
   # Return valid data (or empty list if invalid)
+       #here, we pass the inpute data do the file, so this is where we rewrite missing qhats
   return(remove_invalid(swot_data, sos_data, invalid$invalid_nodes, invalid$invalid_times))
 }
 
@@ -234,6 +241,11 @@ check_observations = function(swot_data, sos_data) {
 #'
 #' @return named list of invalid nodes and times indexes
 get_invalid_nodes_times = function(width, slope2, time) {
+    
+    # print(width)
+    # print(slope2)
+    # print(time)
+
 
   invalid_width = get_invalid(width)
   # print(invalid_width)
@@ -263,13 +275,17 @@ remove_invalid = function(swot_data, sos_data, invalid_nodes, invalid_times){
     #change the date to a datetime object  using the !#$!@#$ origin of the data
     #time is nx by nt, we want an nt vector only
     obs_date= as.Date(as.Date(swot_data$time[1,]/86400,origin = '2000-01-01'),format='%Y%m%d')
+  
     #make it a month
     obs_month=data.frame(month=as.numeric(format(obs_date,'%m')))
-    
+      # print(obs_month)
     #now join the Qhat_df by month
     Q_hat_month=left_join(obs_month,Q_hat_df,by='month')
-
-   
+    #some of these will be blank, so we need to drop the NAs in order to make the data work out
+    # print(Q_hat_month)
+     Q_hat_month$logQ_hat[is.na(Q_hat_month$logQ_hat)]=mean(Q_hat_month$logQ_hat,na.rm=TRUE)
+#     print(Q_hat_month)
+#                                 bonk
     
   # All valid
   if (identical(invalid_nodes, integer(0)) && identical(invalid_times, integer(0))) {
@@ -319,6 +335,8 @@ remove_invalid = function(swot_data, sos_data, invalid_nodes, invalid_times){
     sos_data$window_params$logn_sd = sos_data$window_params$logn_sd[-invalid_nodes]
 
   }
+    
+
 
   # Return list to indicate invalid data
   if (is.null(dim(swot_data$width)) || nrow(swot_data$width) < 3 || ncol(swot_data$width) < 3 ) { return(vector(mode = "list")) }
@@ -326,8 +344,9 @@ remove_invalid = function(swot_data, sos_data, invalid_nodes, invalid_times){
   if (is.null(dim(swot_data$time)) || nrow(swot_data$time) < 3 || ncol(swot_data$time) < 3 ) { return(vector(mode = "list")) }
 
     
+    # print(sos_data$Q_priors$logQ_hat)
+    # bonk
 
-    
     
   # Return list of remaining valid observation data
   return(list(swot_data=swot_data, sos_data=sos_data,
