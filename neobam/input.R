@@ -139,10 +139,13 @@ get_sos = function(sos_file, reach_id) {
     min_q = var.get.nc(model_grp, "min_q")[index]   # Check action taken
     # if(is.null(min_q)){Q_priors$lowerbound_logQ = NA}
     if(is.na(min_q)){Q_priors$lowerbound_logQ = NA} else {
-        if(min_q ==0){min_q=0.01} 
+        if(min_q ==0){
+            min_q=0.01
+         Q_priors$lowerbound_logQ = log(min_q)}
+        
     }
         
-      Q_priors$lowerbound_logQ = log(min_q)
+      
     
 
     r_grp = grp.inq.nc(sos, "gbpriors/reach")$self
