@@ -137,8 +137,10 @@ get_sos = function(sos_file, reach_id) {
   
     Q_priors$upperbound_logQ = log(var.get.nc(model_grp, "max_q")[index])
     min_q = var.get.nc(model_grp, "min_q")[index]   # Check action taken
-    if (is.na(min_q)){Q_priors$lowerbound_logQ = NA}
-    if(min_q ==0){min_q=0.01}
+    # if(is.null(min_q)){Q_priors$lowerbound_logQ = NA}
+    if(is.na(min_q)){Q_priors$lowerbound_logQ = NA} else {
+        if(min_q ==0){min_q=0.01} 
+    }
         
       Q_priors$lowerbound_logQ = log(min_q)
     
