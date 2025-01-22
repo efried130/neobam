@@ -110,8 +110,7 @@ get_sos = function(sos_file, reach_id) {
 
   Q_priors = list()
   sos = reload_sos(sos_file, 5)
-  # print('loaded sos...')
-  # print(sos)
+
 
 
   tries = 5
@@ -132,13 +131,12 @@ get_sos = function(sos_file, reach_id) {
     # print("made it to the model group")
     # print(model_grp)
     Q_priors$logQ_hat = log(var.get.nc(model_grp, "monthly_q")[,index])
-        
-        
   
     Q_priors$upperbound_logQ = log(var.get.nc(model_grp, "max_q")[index])
     min_q = var.get.nc(model_grp, "min_q")[index]   # Check action taken
     # if(is.null(min_q)){Q_priors$lowerbound_logQ = NA}
     if(is.na(min_q)){Q_priors$lowerbound_logQ = NA} else {
+        Q_priors$lowerbound_logQ = log(min_q)
         if(min_q ==0){
             min_q=0.01
          Q_priors$lowerbound_logQ = log(min_q)}
@@ -214,14 +212,9 @@ check_observations = function(swot_data, sos_data) {
   qmin = sos_data$Q_priors$lowerbound_logQ
   qsd = sos_data$Q_priors$logQ_sd
 
-
-    
-
-#     print((all(is.na(qhat[[1]])) || is.na(qmax[[1]]) || is.na(qmin[[1]]) || is.na(qsd[[1]])))
   if (all(is.na(qhat[[1]])) || is.na(qmax[[1]]) || is.na(qmin[[1]]) || is.na(qsd[[1]])) { return(vector(mode = "list")) }
     
   
-
   # SWOT data
   swot_data$width[swot_data$width < 0] = NA
   swot_data$slope2[swot_data$slope2 < 0] = NA
